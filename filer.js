@@ -24,9 +24,14 @@
 
 import { setupPrelude } from "./prelude.js";
 
+import { ValueTypes } from "./value-types.js";
+
 // --- 1. Define the single, persistent state object ---
 const system = {};
 globalThis.system = system;
+
+system.metaschema = {};
+system.metaschema.ValueTypes = ValueTypes;
 
 // --- 2. Load the prelude of curated modules and helpers ---
 setupPrelude(system);
