@@ -1,0 +1,99 @@
+@startuml
+
+    class SystemMetaschema {
+        +valueTypes: Map<string, ValueType>
+    }
+
+    class ValueType {
+        +name: string
+        +format(value: any, ...args: any[]): string
+        +parse(s: string): any
+    }
+
+    class ConceptualSchema {
+        +name: string
+    }
+
+    class FactType {
+        +name: string
+        +arity: number
+    }
+
+    class Role {
+        +name: string
+        +isMandatory: boolean
+    }
+
+    class EntityType {
+        +name: string
+    }
+
+    class LabelType {
+        +name: string
+    }
+
+    class Constraint {
+        +code: string
+    }
+
+    class Kind_of_Constraint {
+        +name: string
+    }
+
+    class Metamodel {
+        +annotations: Map<string, Annotation>
+        +facets: Map<string, Facet>
+    }
+
+    class Annotation {
+        +name: string
+        +properties: Map<string, any>
+    }
+
+    class Facet {
+        +name: string
+        +implementationClass: string
+    }
+
+    class Specification {
+        +satisfiesSafely(object: any): string | null
+    }
+
+    class MessageType {
+        +type: string
+        +payloadSchema: JSONSchema
+    }
+
+    class MessageMetadataDefinition {
+        +traceId: string
+        +userId: string
+        +originStreamName?: string
+    }
+
+    class ProjectionDefinition {
+        +$init(): any
+        +handlers: Map<string, (entity: any, event: any) => any>
+    }
+
+    class ComponentContract {
+        +name: string
+        +commands: MessageType[]
+        +events: MessageType[]
+    }
+
+    SystemMetaschema "1" *-- "*" ValueType : defines
+    ConceptualSchema "1" *-- "*" FactType : consists of
+    FactType "1" *-- "N" Role : involves
+    Role "N" -- "1" EntityType : played by
+    EntityType "1" -- "*" LabelType : referenced by
+    ConceptualSchema "1" *-- "*" Constraint : has
+    Constraint "N" -- "1" Kind_of_Constraint : is of
+
+    Metamodel "1" *-- "*" Annotation : contains
+    Metamodel "1" *-- "*" Facet : contains
+    Metamodel "1" -- "*" Specification : uses
+
+    MessageType "1" -- "1" MessageMetadataDefinition : has metadata defined by
+    ComponentContract "1" *-- "*" MessageType : defines
+    ProjectionDefinition "1" -- "*" MessageType : handles
+@enduml    
