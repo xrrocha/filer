@@ -204,4 +204,4 @@ const ValueTypes = {
 };
 Object.keys(ValueTypes.values).forEach(name =>
     ValueTypes[name] = ValueTypes.values[name])
-onsole.log(ValueTypes);
+console.log(ValueTypes);
