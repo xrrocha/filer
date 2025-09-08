@@ -1,37 +1,41 @@
 // metaschema.js
 
-interface WithMixins {
-    function getMixins(); // [WithMixins]
-};
-
-/**
- * Composes an object from a list of mixin functions and additional properties.
- * Mixin functions are expected to return plain objects.
- * @param {object} options
- * @param {Array<function(): object>} [options.mixins=[]] - An array of functions that return objects to be mixed in.
- * @param {object} [options.properties] - Additional properties to assign.
- * @returns {object} The composed object.
- */
-function ObjectGraph({mixins = [], properties}) {
-    // Ensure mixins array is iterable, even if a single function is passed.
-    const actualMixins = Array.isArray(mixins) ? mixins : [mixins];
-
-    const result = actualMixins.reduce(
-        (obj, mixinFn) => Object.assign(obj, mixinFn()),
-        {}
-    );
-    if (properties) {
-        Object.assign(result, properties);
+class Graph {
+    constructor() {
+        this.graph = new Map();
     }
-    return result;
+   addEdge(u, v) {
+        // If node u is not yet in the graph, initialize its adjacency list as a Set
+        if (!this.graph.has(u)) {
+            this.graph.set(u, new Set());
+        }
+        // Add the neighbor v to the Set for node u.
+        // Sets automatically handle uniqueness, so adding an existing neighbor has no effect.
+        this.graph.get(u).add(v);
+    }
+    topologicalSortUtil(v, visited, stack) {
+        visited.add(v);
+        // Retrieve neighbors as a Set. If v has no neighbors, default to an empty Set.
+        const neighbors = this.graph.get(v) || new Set();
+        for (const neighbor of neighbors) {
+            if (!visited.has(neighbor)) {
+                this.topologicalSortUtil(neighbor, visited, stack);
+            }
+        }
+        stack.push(v);
+    }
+    topologicalSort() {
+        const visited = new Set();
+        const stack = [];
+        for (const vertex of this.graph.keys()) {
+            if (!visited.has(vertex)) {
+                this.topologicalSortUtil(vertex, visited, stack);
+            }
+        }
+        return stack.reverse();
+    }
 }
 
-/**
- * Creates a sequence generator for unique numeric IDs.
- * @param {object} options
- * @param {number} [options.startWith=0] - The initial value of the sequence.
- * @param {number} [options.incrementBy=1] - The amount to increment by each call.
- */
 function SeqGenerator({startWith = 0, incrementBy = 1}) {
     let val = startWith;
     this.nextVal = () => {
@@ -44,32 +48,45 @@ function SeqGenerator({startWith = 0, incrementBy = 1}) {
 // Global sequence generator for meta objects
 const metaObjectSeq = new SeqGenerator({}); // Initialize with empty object to use defaults
 
-/**
- * A factory function that returns a prototype object for meta-objects.
- * It includes a system-generated ID and common meta-properties.
- * @param {object} [proto={}] - An optional object to extend (though currently not used by ObjectGraph for this mixin).
- * @returns {object} A meta-object prototype fragment.
- */
-const metaObjectPrototype = (proto = {}) => ({
-    id: metaObjectSeq.nextVal(),
-    name: undefined,
-    description: undefined,
-    kind: undefined
-});
+function EntityType(options = {supertypes[], properties, init}) {
+    // Computes distinct, ordered set of dependencies
+    const dag = new Graph();
+    // TODO Make sure to add MetaObject root mixin .add(MetaObject);
+    const supertypes = new Set(options?.supertypes || []);
+    for (const parent of supertypes) {
+        for (const grandParent of (parent?.supertypes || [])) {
+            dag.addEdge(grandParent, parent);
+        }
+    }
+    const orderedDependencies = dag.topologicalSort();
 
-/**
- * Defines the 'int' value type as a meta-object.
- */
-const intType = new ObjectGraph({
-    mixins: [metaObjectPrototype],
+    // Performs structural copying of supertypes to new oject
+    const properties = orderedDependencies.reduce(
+        (obj, dependency) => Object.assign(obj, dependency.properties),
+        { id: metaObjectSeq.nextVal() }
+    );
+    if (options?.properties) {
+        Object.assign(properties, options.properties);
+    }
+
+
+    // Initializes new object properties
+    this.kind = "EntityType";
+    this.supertypes = orderedDependencies;
+    this.properties = properties;
+    this.init = options.init;
+
+    orderedDependencies.forEach(dep => dep.init?.call());
+    this.init?.call();
+}
+
+const intType = new EntityType({
+    supertypes: [metaObjectPrototype],
     properties: {
         name: "int",
         description: "Integer value type", // Corrected syntax: added comma
-        kind: "valueType",
+        kind: "ValueType",
         parse: (s) => parseInt(s), // Corrected syntax: using key: value for functions
         format: (i) => i.toString()
     }
 });
-
-// Export all components for testing
-export { ObjectGraph, SeqGenerator, metaObjectPrototype, intType, metaObjectSeq };
