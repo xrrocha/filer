@@ -48,7 +48,7 @@ function SeqGenerator({startWith = 0, incrementBy = 1}) {
 // Global sequence generator for meta objects
 const metaObjectSeq = new SeqGenerator({}); // Initialize with empty object to use defaults
 
-function EntityType(options = {supertypes[], properties, init}) {
+function EntityType(options = {supertypes, properties, init}) {
     // Computes distinct, ordered set of dependencies
     const dag = new Graph();
     // TODO Make sure to add MetaObject root mixin .add(MetaObject);
@@ -81,7 +81,7 @@ function EntityType(options = {supertypes[], properties, init}) {
 }
 
 const intType = new EntityType({
-    supertypes: [metaObjectPrototype],
+    // supertypes: [metaObjectPrototype],
     properties: {
         name: "int",
         description: "Integer value type", // Corrected syntax: added comma
@@ -90,3 +90,5 @@ const intType = new EntityType({
         format: (i) => i.toString()
     }
 });
+
+console.log(intType);
