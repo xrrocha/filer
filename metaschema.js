@@ -205,3 +205,7 @@ const ValueTypes = {
 Object.keys(ValueTypes.values).forEach(name =>
     ValueTypes[name] = ValueTypes.values[name])
 console.log(ValueTypes);
+
+
+// Export the components for testing
+export { Graph, SeqGenerator, EntityType, ValueTypes };
