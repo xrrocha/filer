@@ -60,5 +60,6 @@ console.log(numisma.schema.PaymentCardNetwork.properties.id.constraint.expressio
 numisma.data.PaymentCardNetwork = {
     id: 1,
     __metadata__: numisma.schema.PaymentCardNetwork,
+    name: Mastercard,
     // . . .
 };
