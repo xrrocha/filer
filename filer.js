@@ -9,6 +9,37 @@ function isIterable(obj) {
 function isType(obj) {
     return obj != null && typeof obj[kind] === 'string';
 }
+function Graph() {
+    const graph = new Map();
+    return {
+        addEdge(u, v) {
+            if (!graph.has(u)) {
+                graph.set(u, new Set());
+            }
+            graph.get(u).add(v);
+        },
+        topologicalSort() {
+            function topologicalSortUtil(v, visited, stack) {
+                visited.add(v);
+                const neighbors = graph.get(v) || new Set();
+                for (const neighbor of neighbors) {
+                    if (!visited.has(neighbor)) {
+                        topologicalSortUtil(neighbor, visited, stack);
+                    }
+                }
+                stack.push(v);
+            };
+            const visited = new Set();
+            const stack = [];
+            for (const vertex of graph.keys()) {
+                if (!visited.has(vertex)) {
+                    topologicalSortUtil(vertex, visited, stack);
+                }
+            }
+            return stack.reverse();
+        },
+    };
+};
 function type({name, description, supertypes}) {
     if (!name) {
         throw "Missing name";
@@ -24,15 +55,34 @@ function type({name, description, supertypes}) {
     } else {
         Type.names.add(name);
     }
-    const ancestors = supertypes || [];
-    if (!isIterable(ancestors)) {
+    supertypes = supertypes || [];
+    if (!isIterable(supertypes)) {
         throw "No iterable supertypes";
     }
-    if (!ancestors.every(s => isType(s))) {
-        throw "Supertype not a type";
+    const notType = supertypes.find(s => !isType(s));
+    if (notType) {
+        throw "Supertype not a type: " + notType;
     }
-    ancestors.forEach(ancestor => ancestor.supertypes.push(ancestor));
-    return {name, description, supertypes: ancestors, subtypes: []};
+    function sortSuperTypes(types) {
+        const dag = new Graph();
+        for (const type of types || []) {
+            for (const supertype of type.supertypes || []) {
+                dag.addEdge(supertype, type)
+            }
+        }
+        return dag.topologicalSort();
+    }
+    const ancestors = sortSuperTypes(supertypes);
+    const result = {
+        name, description,
+        supertypes: ancestors, subtypes: []
+    };
+    ancestors.reduce(
+        (obj, mixin) => Object.assign(obj, mixin()),
+        result
+    )
+    ancestors.forEach(ancestor => ancestor.subtypes.push(ancestor));
+    return result;
 }
 
 const ValueType = {};
