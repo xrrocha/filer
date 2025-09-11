@@ -4,6 +4,15 @@ const assert = console.assert
 const Type = {};
 Type.names = new Set();
 function type({name, description}) {
+    if (!name) {
+        throw "Missing name";
+    }
+    if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) {
+        throw "Invalid name: " + name;
+    }
+    if (!description) {
+        throw "Missing description";
+    }
     if (Type.names.has(name)) {
         throw "Name taken: " + name;
     } else {
@@ -41,10 +50,22 @@ try {
   valueType({name: "int"});
   throw "Dup 'int' name allowed";
 } catch(err) { }
+try {
+  valueType({name: null});
+  throw "Null name allowed";
+} catch(err) { }
+try {
+  valueType({name: undefined});
+  throw "Undefined name allowed";
+} catch(err) { }
+try {
+  valueType({name: '1234'});
+  throw "Non-symbolic name allowed";
+} catch(err) { }
 assert(int.parse("123.456") === 123, `Bad integer parsing`);
 assert( int.format(654 === "654"), "Bad integer formatting");
 assert(123 == int.parse(int.format(123)));
-assert("123" == int.format(int.parse("123")));
+assert("321" == int.format(int.parse("321")));
 
 const ObjectType = {};
 const EntityType = {};
