@@ -41,5 +41,5 @@ const int = valueType({
     serializer: simpleSerializer(s => parseInt(s)),
 });
 
-assert(int.parse("123.456") === 123, `Bad integer parsing: ${int.parse("123.456")}`);
+assert(int.parse("123.456") === 123, `Bad integer parsing`);
 assert( int.format(654 === "654"), "Bad integer formatting");
