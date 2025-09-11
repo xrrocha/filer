@@ -3,7 +3,13 @@ const assert = console.assert
 
 const Type = {};
 Type.names = new Set();
-function type({name, description}) {
+function isIterable(obj) {
+    return obj != null && typeof obj[Symbol.iterator] === 'function';
+}
+function isType(obj) {
+    return obj != null && typeof obj[kind] === 'string';
+}
+function type({name, description, supertypes}) {
     if (!name) {
         throw "Missing name";
     }
@@ -18,7 +24,15 @@ function type({name, description}) {
     } else {
         Type.names.add(name);
     }
-    return {name, description};
+    const ancestors = supertypes || [];
+    if (!isIterable(ancestors)) {
+        throw "No iterable supertypes";
+    }
+    if (!ancestors.every(s => isType(s))) {
+        throw "Supertype not a type";
+    }
+    ancestors.forEach(ancestor => ancestor.supertypes.push(ancestor));
+    return {name, description, supertypes: ancestors, subtypes: []};
 }
 
 const ValueType = {};
