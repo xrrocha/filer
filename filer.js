@@ -22,23 +22,24 @@ function simpleSerializer(parse, format = o => o.toString()) {
 };
 
 function valueType(options = {name, description, serializer}) {
-    return {
+    const instance = {
+        kind: "ValueType",
         ...type({
             name: options.name,
             description: options.description
         }),
-        ...options,
-        kind: "ValueType",
         serializer: options.serializer,
-        format: options.serializer.format,
-        parse: options.serializer.parse,
+        format(v) { return options.serializer.format(v); },
+        parse(v) { return options.serializer.parse(v); },
     };
+    return instance;
 }
+
 const int = valueType({
     name: "int",
     description: "Integer value type",
     serializer: simpleSerializer(s => parseInt(s)),
 });
 
-assert(int.parse("123.456") === 123, "Bad integer parsing");
+assert(int.parse("123.456") === 123, `Bad integer parsing: ${int.parse("123.456")}`);
 assert( int.format(654 === "654"), "Bad integer formatting");
