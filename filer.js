@@ -96,6 +96,7 @@ function valueType(options = {name, description, serializer}) {
             name: options.name,
             description: options.description
         }),
+        // TODO Analyze mixins and delegation
         serializer: options.serializer,
         format(v) { return options.serializer.format(v); },
         parse(v) { return options.serializer.parse(v); },
