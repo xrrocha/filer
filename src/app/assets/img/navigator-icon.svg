@@ -1,0 +1,25 @@
+<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="24" cy="24" r="22" fill="#6366f1"/>
+  
+  <!-- Connection lines (representing associations) -->
+  <line x1="24" y1="14" x2="16" y2="24" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+  <line x1="24" y1="14" x2="32" y2="24" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+  <line x1="16" y1="24" x2="24" y2="34" stroke="#10b981" stroke-width="2" stroke-linecap="round"/>
+  <line x1="32" y1="24" x2="24" y2="34" stroke="#10b981" stroke-width="2" stroke-linecap="round"/>
+  <line x1="16" y1="24" x2="32" y2="24" stroke="#ec4899" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Knowledge nodes -->
+  <circle cx="24" cy="14" r="4" fill="#fef3c7"/>
+  <circle cx="16" cy="24" r="4" fill="#fde68a"/>
+  <circle cx="32" cy="24" r="4" fill="#fde68a"/>
+  <circle cx="24" cy="34" r="4" fill="#fef3c7"/>
+  
+  <!-- Central hub -->
+  <circle cx="24" cy="24" r="3" fill="#ffffff"/>
+  
+  <!-- Text at the bottom (using standard text positioning) -->
+  <text x="24" y="43" font-family="Arial, sans-serif" font-size="5.5" font-weight="bold" fill="#ffffff" text-anchor="middle" letter-spacing="1.5">
+    Navigator
+  </text>
+</svg>

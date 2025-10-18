@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Log Browser Tests</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    #status {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+    }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    .info { background: #d1ecf1; color: #0c5460; }
+  </style>
+</head>
+<body>
+  <h1>Event Log Browser Tests</h1>
+  <div id="status" class="info">Loading tests...</div>
+  <div id="results"></div>
+
+  <script type="module">
+    // This page will be loaded by Playwright and execute browser tests
+    // We'll import the event-log module and run tests
+
+    window.testResults = {
+      passed: 0,
+      failed: 0,
+      tests: []
+    };
+
+    window.assert = {
+      ok(value, message) {
+        if (!value) {
+          throw new Error(message || 'Assertion failed');
+        }
+      },
+      equal(actual, expected, message) {
+        if (actual !== expected) {
+          throw new Error(message || `Expected ${expected}, got ${actual}`);
+        }
+      },
+      deepEqual(actual, expected, message) {
+        const actualStr = JSON.stringify(actual);
+        const expectedStr = JSON.stringify(expected);
+        if (actualStr !== expectedStr) {
+          throw new Error(message || `Expected ${expectedStr}, got ${actualStr}`);
+        }
+      }
+    };
+
+    window.runTest = async function(name, fn) {
+      const test = { name, status: 'pending', error: null };
+      window.testResults.tests.push(test);
+
+      try {
+        await fn();
+        test.status = 'passed';
+        window.testResults.passed++;
+      } catch (error) {
+        test.status = 'failed';
+        test.error = error.message;
+        window.testResults.failed++;
+      }
+
+      return test;
+    };
+
+    window.testReady = true;
+
+    const status = document.getElementById('status');
+    status.textContent = 'Ready for tests';
+    status.className = 'info';
+  </script>
+</body>
+</html>

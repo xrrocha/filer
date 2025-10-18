@@ -1,0 +1,79 @@
+{
+  "name": "filer",
+  "version": "0.1.0",
+  "description": "Filer: Memory Image + Navigator + Metadata - Event-sourced transparent persistence with schema-driven interactive browser explorer",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "npm run test:all",
+    "test:all": "npm run test:memimg && npm run test:navigator && npm run test:metadata && npm run test:integration && npm run test:browser",
+    "test:coverage": "npm run test:memimg:coverage && npm run test:navigator:coverage && npm run test:metadata:coverage",
+    "test:memimg": "tsx test/memimg/run-tests.ts",
+    "test:memimg:unit": "tsx test/memimg/run-tests.ts --unit",
+    "test:memimg:integration": "tsx test/memimg/run-tests.ts --integration",
+    "test:memimg:watch": "tsx test/memimg/run-tests.ts --watch",
+    "test:memimg:filter": "tsx test/memimg/run-tests.ts --filter",
+    "test:memimg:coverage": "c8 --reporter=html --reporter=text --reporter=json-summary --reports-dir=.artifacts/coverage tsx test/memimg/run-tests.ts",
+    "test:navigator": "npm run test:navigator:unit",
+    "test:navigator:unit": "node --test test/navigator/unit/**/*.test.ts",
+    "test:navigator:unit:watch": "node --test --watch test/navigator/unit/**/*.test.ts",
+    "test:navigator:integration": "playwright test test/navigator/integration",
+    "test:navigator:e2e": "playwright test test/navigator/e2e",
+    "test:navigator:coverage": "c8 --reporter=html --reporter=text --reporter=json-summary --reports-dir=.artifacts/coverage --include='dist/navigator/**/*.js' npm run test:navigator:unit",
+    "test:metadata": "tsx test/metadata/run-tests.ts",
+    "test:metadata:unit": "tsx test/metadata/run-tests.ts --unit",
+    "test:metadata:integration": "tsx test/metadata/run-tests.ts --integration",
+    "test:metadata:watch": "tsx test/metadata/run-tests.ts --watch",
+    "test:metadata:filter": "tsx test/metadata/run-tests.ts --filter",
+    "test:metadata:coverage": "c8 --reporter=html --reporter=text --reporter=json-summary --reports-dir=.artifacts/coverage tsx test/metadata/run-tests.ts",
+    "test:integration": "tsx test/integration/run-tests.ts",
+    "test:integration:watch": "tsx test/integration/run-tests.ts --watch",
+    "test:browser": "playwright test",
+    "test:browser:ui": "playwright test --ui",
+    "test:browser:headed": "playwright test --headed",
+    "serve:test": "http-server . -p 3000 -c-1 --cors",
+    "clean": "node -e \"['dist','.artifacts','.test-artifacts'].forEach(d=>require('fs').rmSync(d,{recursive:true,force:true}))\"",
+    "verify:portability": "node scripts/verify-portability.js"
+  },
+  "dependencies": {
+    "codejar": "^4.2.0",
+    "prismjs": "^1.29.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "@types/node": "^22.10.2",
+    "@types/prismjs": "^1.26.5",
+    "c8": "^10.1.3",
+    "glob": "^11.0.0",
+    "http-server": "^14.1.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.5",
+    "vite-plugin-singlefile": "^2.0.2"
+  },
+  "keywords": [
+    "memory-image",
+    "event-sourcing",
+    "persistence",
+    "metadata",
+    "schema",
+    "navigator",
+    "repl",
+    "explorer",
+    "browser",
+    "filer"
+  ],
+  "author": "Ricardo Rocha",
+  "license": "Apache2",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xrrocha/filer.git"
+  },
+  "homepage": "https://github.com/xrrocha/filer",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

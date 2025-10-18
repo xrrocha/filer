@@ -1,0 +1,46 @@
+# Private development notes
+.local/
+CLAUDE.md
+GEMINI.md
+
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build outputs - Keep ONLY dist/index.html tracked
+dist/*
+!dist/index.html
+*.tsbuildinfo
+
+# Artifacts - Everything hidden
+.artifacts/
+coverage/
+test-results/
+test-event-logs/
+
+# Testing artifacts (in case created at root by old tests)
+.nyc_output/
+.test-artifacts/
+
+# Development
+.DS_Store
+*.log
+*.swp
+*~
+
+# IDE
+.vscode/
+.idea/
+*.iml
+.zed/
+.claude
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Screenshots (Playwright automation)
+screenshot*

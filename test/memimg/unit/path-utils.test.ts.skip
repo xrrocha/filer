@@ -1,0 +1,412 @@
+/**
+ * Unit tests for path-utils.ts
+ *
+ * Tests all path traversal and manipulation utilities.
+ * Coverage: 100% of exported functions, all edge cases
+ */
+
+import { describe, it } from 'node:test';
+import { strict as assert } from 'node:assert';
+import {
+  navigateToPath,
+  getAtPath,
+  setAtPath,
+  deleteAtPath,
+  isNumericKey,
+  pathToString,
+  stringToPath,
+  isValidPath,
+  getParentPath,
+  getPathLeaf,
+} from '../../../src/memimg/path-utils.js';
+import { assertThrows, assertDeepEqual } from '../fixtures/helpers.js';
+
+describe('path-utils', () => {
+  describe('navigateToPath', () => {
+    describe('basic navigation', () => {
+      it('navigates to root with empty path', () => {
+        const root = { a: 1, b: 2 };
+        const result = navigateToPath(root, []);
+        assert.equal(result, root);
+      });
+
+      it('navigates to single-level property', () => {
+        const root = { a: { value: 42 } };
+        const result = navigateToPath(root, ['a']);
+        assertDeepEqual(result, { value: 42 });
+      });
+
+      it('navigates to deep nested property', () => {
+        const root = { a: { b: { c: { d: 'deep' } } } };
+        const result = navigateToPath(root, ['a', 'b', 'c', 'd']);
+        assert.equal(result, 'deep');
+      });
+
+      it('navigates through arrays', () => {
+        const root = { items: [{ id: 1 }, { id: 2 }, { id: 3 }] };
+        const result = navigateToPath(root, ['items', '1', 'id']);
+        assert.equal(result, 2);
+      });
+
+      it('navigates to array element', () => {
+        const root = { arr: [10, 20, 30] };
+        const result = navigateToPath(root, ['arr', '0']);
+        assert.equal(result, 10);
+      });
+    });
+
+    describe('parent navigation', () => {
+      it('returns parent and key with parent option', () => {
+        const root = { a: { b: { c: 'value' } } };
+        const result = navigateToPath(root, ['a', 'b', 'c'], { parent: true });
+        assert.ok(result.target);
+        assert.equal(result.key, 'c');
+        assertDeepEqual(result.target, { c: 'value' });
+      });
+
+      it('returns root as parent for single-level path', () => {
+        const root = { a: 'value' };
+        const result = navigateToPath(root, ['a'], { parent: true });
+        assert.equal(result.target, root);
+        assert.equal(result.key, 'a');
+      });
+
+      it('returns root for empty path with parent option', () => {
+        const root = { a: 1 };
+        const result = navigateToPath(root, [], { parent: true });
+        assert.equal(result.target, root);
+        assert.equal(result.key, null);
+      });
+    });
+
+    describe('creation option', () => {
+      it('creates intermediate objects when create=true', () => {
+        const root: any = {};
+        navigateToPath(root, ['a', 'b', 'c'], { create: true });
+        assert.ok(root.a);
+        assert.ok(root.a.b);
+        assert.ok(root.a.b.c);
+      });
+
+      it('creates arrays for numeric segments', () => {
+        const root: any = {};
+        navigateToPath(root, ['items', '0'], { create: true });
+        assert.ok(Array.isArray(root.items));
+      });
+
+      it('creates objects for non-numeric segments', () => {
+        const root: any = {};
+        navigateToPath(root, ['data', 'info'], { create: true });
+        assert.ok(!Array.isArray(root.data));
+        assert.equal(typeof root.data, 'object');
+      });
+
+      it('throws when path not found and create=false', () => {
+        const root = { a: { b: 1 } };
+        assertThrows(
+          () => navigateToPath(root, ['a', 'c', 'd']),
+          'Path not found'
+        );
+      });
+
+      it('creates mixed array and object path', () => {
+        const root: any = {};
+        navigateToPath(root, ['users', '0', 'profile', 'name'], { create: true });
+        assert.ok(Array.isArray(root.users));
+        assert.ok(root.users[0].profile);
+      });
+    });
+
+    describe('error handling', () => {
+      it('throws for non-existent path', () => {
+        const root = { a: 1 };
+        assertThrows(
+          () => navigateToPath(root, ['b', 'c']),
+          'Path not found: b'
+        );
+      });
+
+      it('throws for partial path', () => {
+        const root = { a: { b: 1 } };
+        assertThrows(
+          () => navigateToPath(root, ['a', 'b', 'c']),
+          'Path not found'
+        );
+      });
+
+      it('handles undefined segments gracefully', () => {
+        const root: any = { a: undefined };
+        assertThrows(
+          () => navigateToPath(root, ['a', 'b']),
+          'Path not found'
+        );
+      });
+    });
+  });
+
+  describe('getAtPath', () => {
+    it('returns value at valid path', () => {
+      const root = { a: { b: { c: 42 } } };
+      const result = getAtPath(root, ['a', 'b', 'c']);
+      assert.equal(result, 42);
+    });
+
+    it('returns undefined for invalid path', () => {
+      const root = { a: 1 };
+      const result = getAtPath(root, ['b', 'c']);
+      assert.equal(result, undefined);
+    });
+
+    it('returns root for empty path', () => {
+      const root = { value: 'test' };
+      const result = getAtPath(root, []);
+      assert.equal(result, root);
+    });
+
+    it('returns array element', () => {
+      const root = { items: [1, 2, 3] };
+      const result = getAtPath(root, ['items', '1']);
+      assert.equal(result, 2);
+    });
+
+    it('returns undefined for out-of-bounds array index', () => {
+      const root = { items: [1, 2, 3] };
+      const result = getAtPath(root, ['items', '10']);
+      assert.equal(result, undefined);
+    });
+  });
+
+  describe('setAtPath', () => {
+    it('sets value at existing path', () => {
+      const root: any = { a: { b: 'old' } };
+      setAtPath(root, ['a', 'b'], 'new');
+      assert.equal(root.a.b, 'new');
+    });
+
+    it('creates intermediate objects', () => {
+      const root: any = {};
+      setAtPath(root, ['a', 'b', 'c'], 'value');
+      assert.equal(root.a.b.c, 'value');
+    });
+
+    it('sets array element', () => {
+      const root: any = { items: [1, 2, 3] };
+      setAtPath(root, ['items', '1'], 99);
+      assert.equal(root.items[1], 99);
+    });
+
+    it('creates arrays for numeric paths', () => {
+      const root: any = {};
+      setAtPath(root, ['items', '0'], 'first');
+      assert.ok(Array.isArray(root.items));
+      assert.equal(root.items[0], 'first');
+    });
+
+    it('throws for empty path', () => {
+      const root = {};
+      assertThrows(
+        () => setAtPath(root, [], 'value'),
+        'Cannot set value at empty path'
+      );
+    });
+
+    it('handles deep nesting', () => {
+      const root: any = {};
+      setAtPath(root, ['a', 'b', 'c', 'd', 'e'], 'deep');
+      assert.equal(root.a.b.c.d.e, 'deep');
+    });
+
+    it('overwrites existing values', () => {
+      const root: any = { a: { b: { c: 1 } } };
+      setAtPath(root, ['a', 'b'], 'new');
+      assert.equal(root.a.b, 'new');
+    });
+  });
+
+  describe('deleteAtPath', () => {
+    it('deletes property at path', () => {
+      const root: any = { a: { b: { c: 'delete-me' } } };
+      deleteAtPath(root, ['a', 'b', 'c']);
+      assert.equal('c' in root.a.b, false);
+    });
+
+    it('does nothing for non-existent path', () => {
+      const root: any = { a: 1 };
+      deleteAtPath(root, ['b', 'c']); // Should not throw
+      assertDeepEqual(root, { a: 1 });
+    });
+
+    it('throws for empty path', () => {
+      const root = {};
+      assertThrows(
+        () => deleteAtPath(root, []),
+        'Cannot delete at empty path'
+      );
+    });
+
+    it('deletes array element', () => {
+      const root: any = { items: [1, 2, 3] };
+      deleteAtPath(root, ['items', '1']);
+      assert.equal(root.items[1], undefined);
+    });
+
+    it('deletes deeply nested property', () => {
+      const root: any = { a: { b: { c: { d: 'remove' } } } };
+      deleteAtPath(root, ['a', 'b', 'c', 'd']);
+      assert.equal('d' in root.a.b.c, false);
+    });
+  });
+
+  describe('isNumericKey', () => {
+    it('returns true for numeric strings', () => {
+      assert.equal(isNumericKey('0'), true);
+      assert.equal(isNumericKey('1'), true);
+      assert.equal(isNumericKey('42'), true);
+      assert.equal(isNumericKey('999'), true);
+    });
+
+    it('returns false for non-numeric strings', () => {
+      assert.equal(isNumericKey('a'), false);
+      assert.equal(isNumericKey('1a'), false);
+      assert.equal(isNumericKey('a1'), false);
+      assert.equal(isNumericKey(''), false);
+      assert.equal(isNumericKey('0x10'), false);
+    });
+
+    it('returns false for negative numbers', () => {
+      assert.equal(isNumericKey('-1'), false);
+      assert.equal(isNumericKey('-42'), false);
+    });
+
+    it('returns false for decimal numbers', () => {
+      assert.equal(isNumericKey('1.5'), false);
+      assert.equal(isNumericKey('3.14'), false);
+    });
+
+    it('returns false for special strings', () => {
+      assert.equal(isNumericKey('NaN'), false);
+      assert.equal(isNumericKey('Infinity'), false);
+    });
+  });
+
+  describe('pathToString', () => {
+    it('converts empty path', () => {
+      assert.equal(pathToString([]), '');
+    });
+
+    it('converts single-segment path', () => {
+      assert.equal(pathToString(['a']), 'a');
+    });
+
+    it('converts multi-segment path', () => {
+      assert.equal(pathToString(['a', 'b', 'c']), 'a.b.c');
+    });
+
+    it('preserves numeric segments', () => {
+      assert.equal(pathToString(['items', '0', 'id']), 'items.0.id');
+    });
+
+    it('handles special characters', () => {
+      assert.equal(pathToString(['a-b', 'c_d']), 'a-b.c_d');
+    });
+  });
+
+  describe('stringToPath', () => {
+    it('converts empty string', () => {
+      assertDeepEqual(stringToPath(''), ['']);
+    });
+
+    it('converts single segment', () => {
+      assertDeepEqual(stringToPath('a'), ['a']);
+    });
+
+    it('converts multi-segment path', () => {
+      assertDeepEqual(stringToPath('a.b.c'), ['a', 'b', 'c']);
+    });
+
+    it('preserves numeric segments', () => {
+      assertDeepEqual(stringToPath('items.0.id'), ['items', '0', 'id']);
+    });
+
+    it('round-trips with pathToString', () => {
+      const original = ['a', 'b', 'c', '0', 'd'];
+      const str = pathToString(original);
+      const result = stringToPath(str);
+      assertDeepEqual(result, original);
+    });
+  });
+
+  describe('isValidPath', () => {
+    it('returns true for valid paths', () => {
+      const root = { a: { b: { c: 'value' } } };
+      assert.equal(isValidPath(root, ['a']), true);
+      assert.equal(isValidPath(root, ['a', 'b']), true);
+      assert.equal(isValidPath(root, ['a', 'b', 'c']), true);
+    });
+
+    it('returns false for invalid paths', () => {
+      const root = { a: { b: 1 } };
+      assert.equal(isValidPath(root, ['x']), false);
+      assert.equal(isValidPath(root, ['a', 'x']), false);
+      assert.equal(isValidPath(root, ['a', 'b', 'c']), false);
+    });
+
+    it('returns true for empty path', () => {
+      const root = { a: 1 };
+      assert.equal(isValidPath(root, []), true);
+    });
+
+    it('validates array paths', () => {
+      const root = { items: [1, 2, 3] };
+      assert.equal(isValidPath(root, ['items', '0']), true);
+      assert.equal(isValidPath(root, ['items', '10']), false);
+    });
+  });
+
+  describe('getParentPath', () => {
+    it('returns null for empty path', () => {
+      assert.equal(getParentPath([]), null);
+    });
+
+    it('returns null for single-segment path', () => {
+      assert.equal(getParentPath(['a']), null);
+    });
+
+    it('returns parent for multi-segment path', () => {
+      assertDeepEqual(getParentPath(['a', 'b', 'c']), ['a', 'b']);
+    });
+
+    it('returns parent for two-segment path', () => {
+      assertDeepEqual(getParentPath(['a', 'b']), ['a']);
+    });
+
+    it('handles deep paths', () => {
+      assertDeepEqual(
+        getParentPath(['a', 'b', 'c', 'd', 'e']),
+        ['a', 'b', 'c', 'd']
+      );
+    });
+  });
+
+  describe('getPathLeaf', () => {
+    it('returns "root" for empty path', () => {
+      assert.equal(getPathLeaf([]), 'root');
+    });
+
+    it('returns segment for single-segment path', () => {
+      assert.equal(getPathLeaf(['a']), 'a');
+    });
+
+    it('returns last segment for multi-segment path', () => {
+      assert.equal(getPathLeaf(['a', 'b', 'c']), 'c');
+    });
+
+    it('returns numeric segment', () => {
+      assert.equal(getPathLeaf(['items', '0']), '0');
+    });
+
+    it('handles deep paths', () => {
+      assert.equal(getPathLeaf(['a', 'b', 'c', 'd', 'e']), 'e');
+    });
+  });
+});

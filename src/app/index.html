@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigator - Memory Image Explorer</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg
+    viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='24'
+    cy='24' r='22' fill='%236366f1'/%3E%3Cline x1='24' y1='14' x2='16' y2='24'
+    stroke='%23fbbf24' stroke-width='2' stroke-linecap='round'/%3E%3Cline
+    x1='24' y1='14' x2='32' y2='24' stroke='%23fbbf24' stroke-width='2'
+    stroke-linecap='round'/%3E%3Cline x1='16' y1='24' x2='24' y2='34'
+    stroke='%2310b981' stroke-width='2' stroke-linecap='round'/%3E%3Cline
+    x1='32' y1='24' x2='24' y2='34' stroke='%2310b981' stroke-width='2'
+    stroke-linecap='round'/%3E%3Cline x1='16' y1='24' x2='32' y2='24'
+    stroke='%23ec4899' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle
+    cx='24' cy='14' r='4' fill='%23fef3c7'/%3E%3Ccircle cx='16' cy='24' r='4'
+    fill='%23fde68a'/%3E%3Ccircle cx='32' cy='24' r='4'
+    fill='%23fde68a'/%3E%3Ccircle cx='24' cy='34' r='4'
+    fill='%23fef3c7'/%3E%3Ccircle cx='24' cy='24' r='3'
+    fill='%23ffffff'/%3E%3Ctext x='24' y='43' font-family='Arial, sans-serif'
+    font-size='5.5' font-weight='bold' fill='%23ffffff' text-anchor='middle'
+    letter-spacing='1.5'%3ENavigator%3C/text%3E%3C/svg%3E">
+    <link rel="stylesheet" href="/css/navigator.css">
+    <!-- JavaScript Type System - Inlined for file:// protocol compatibility -->
+    <script>
+(function(global) {
+  'use strict';
+
+  function Type(name) {
+    this.typeName = name;
+  }
+
+  Type.prototype.check = function(value) {
+    throw new Error(`${this.typeName}.check() not implemented`);
+  };
+
+  function PrimitiveType(name) {
+    Type.call(this, name);
+  }
+
+  PrimitiveType.prototype = Object.create(Type.prototype);
+  PrimitiveType.prototype.constructor = PrimitiveType;
+
+  PrimitiveType.prototype.check = function(value) {
+    switch(this.typeName) {
+      case 'number': return typeof value === 'number';
+      case 'string': return typeof value === 'string';
+      case 'boolean': return typeof value === 'boolean';
+      case 'bigint': return typeof value === 'bigint';
+      case 'symbol': return typeof value === 'symbol';
+      case 'undefined': return value === undefined;
+      case 'null': return value === null;
+      default: return false;
+    }
+  };
+
+  const NumberType = new PrimitiveType('number');
+  const StringType = new PrimitiveType('string');
+  const BooleanType = new PrimitiveType('boolean');
+  const BigIntType = new PrimitiveType('bigint');
+  const SymbolType = new PrimitiveType('symbol');
+  const UndefinedType = new PrimitiveType('undefined');
+  const NullType = new PrimitiveType('null');
+
+  function ObjectType({name, properties = {}, prototype = null}) {
+    const factory = function(props = {}) {
+      const instance = Object.create(factory.prototype);
+
+      Object.keys(properties).forEach(propName => {
+        if (propName in props) {
+          instance[propName] = props[propName];
+        }
+      });
+
+      Object.defineProperty(instance, '__type__', {
+        value: factory,
+        writable: false,
+        enumerable: false,
+        configurable: false
+      });
+
+      return instance;
+    };
+
+    if (prototype) {
+      factory.prototype = Object.create(prototype);
+    } else {
+      factory.prototype = {};
+    }
+
+    factory.typeName = name;
+    factory.properties = properties;
+
+    Object.setPrototypeOf(factory, ObjectType.prototype);
+    Type.call(factory, name);
+
+    return factory;
+  }
+
+  Type.call(ObjectType, 'ObjectType');
+  ObjectType.prototype = Object.create(Type.prototype);
+  ObjectType.prototype.constructor = ObjectType;
+
+  ObjectType.prototype.check = function(value) {
+    return typeof value === 'object' && value !== null && value.__type__ === this;
+  };
+
+  function FunctionType({name, signature = null}) {
+    Type.call(this, name);
+    this.signature = signature;
+  }
+
+  FunctionType.prototype = Object.create(Type.prototype);
+  FunctionType.prototype.constructor = FunctionType;
+
+  FunctionType.prototype.check = function(value) {
+    return typeof value === 'function';
+  };
+
+  function ArrayType(elementType = null) {
+    Type.call(this, elementType ? `Array<${elementType.typeName}>` : 'Array');
+    this.elementType = elementType;
+  }
+
+  ArrayType.prototype = Object.create(Type.prototype);
+  ArrayType.prototype.constructor = ArrayType;
+
+  ArrayType.prototype.check = function(value) {
+    return Array.isArray(value);
+  };
+
+  const ArrayTypeInstance = new ArrayType();
+
+  function SetType(elementType = null) {
+    Type.call(this, elementType ? `Set<${elementType.typeName}>` : 'Set');
+    this.elementType = elementType;
+  }
+
+  SetType.prototype = Object.create(Type.prototype);
+  SetType.prototype.constructor = SetType;
+
+  SetType.prototype.check = function(value) {
+    return value instanceof Set;
+  };
+
+  const SetTypeInstance = new SetType();
+
+  function MapType(keyType = null, valueType = null) {
+    const keyPart = keyType ? keyType.typeName : '*';
+    const valuePart = valueType ? valueType.typeName : '*';
+    Type.call(this, `Map<${keyPart}, ${valuePart}>`);
+    this.keyType = keyType;
+    this.valueType = valueType;
+  }
+
+  MapType.prototype = Object.create(Type.prototype);
+  MapType.prototype.constructor = MapType;
+
+  MapType.prototype.check = function(value) {
+    return value instanceof Map;
+  };
+
+  const MapTypeInstance = new MapType();
+
+  function DateType() {
+    Type.call(this, 'Date');
+  }
+
+  DateType.prototype = Object.create(Type.prototype);
+  DateType.prototype.constructor = DateType;
+
+  DateType.prototype.check = function(value) {
+    return value instanceof Date;
+  };
+
+  const DateTypeInstance = new DateType();
+
+  const JSTypes = {
+    Type,
+    PrimitiveType,
+    NumberType,
+    StringType,
+    BooleanType,
+    BigIntType,
+    SymbolType,
+    UndefinedType,
+    NullType,
+    ObjectType,
+    FunctionType,
+    ArrayType,
+    ArrayTypeInstance,
+    SetType,
+    SetTypeInstance,
+    MapType,
+    MapTypeInstance,
+    DateType,
+    DateTypeInstance
+  };
+
+  global.JSTypes = JSTypes;
+  global.Type = Type;
+  global.PrimitiveType = PrimitiveType;
+  global.NumberType = NumberType;
+  global.StringType = StringType;
+  global.BooleanType = BooleanType;
+  global.BigIntType = BigIntType;
+  global.SymbolType = SymbolType;
+  global.UndefinedType = UndefinedType;
+  global.NullType = NullType;
+  global.ObjectType = ObjectType;
+  global.FunctionType = FunctionType;
+  global.ArrayType = ArrayType;
+  global.SetType = SetType;
+  global.MapType = MapType;
+  global.DateType = DateType;
+  global.DateTypeInstance = DateTypeInstance;
+
+})(typeof window !== 'undefined' ? window : global);
+    </script>
+</head>
+<body>
+    <div id="app">
+        <!-- List View (shown by default) -->
+        <div id="list-view" class="view-container">
+            <div class="app-title">Filer Navigator</div>
+            <header class="list-header">
+                <div class="logo">
+                    <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"
+                    width="32" height="32" aria-label="Navigator">
+                        <circle cx="24" cy="24" r="22" fill="#6366f1"/>
+                        <line x1="24" y1="14" x2="16" y2="24" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="24" y1="14" x2="32" y2="24" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="16" y1="24" x2="24" y2="34" stroke="#10b981" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="32" y1="24" x2="24" y2="34" stroke="#10b981" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="16" y1="24" x2="32" y2="24" stroke="#ec4899" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="24" cy="14" r="4" fill="#fef3c7"/>
+                        <circle cx="16" cy="24" r="4" fill="#fde68a"/>
+                        <circle cx="32" cy="24" r="4" fill="#fde68a"/>
+                        <circle cx="24" cy="34" r="4" fill="#fef3c7"/>
+                        <circle cx="24" cy="24" r="3" fill="#ffffff"/>
+                        <text x="24" y="43" font-family="Arial, sans-serif"
+                        font-size="5.5" font-weight="bold" fill="#ffffff"
+                        text-anchor="middle" letter-spacing="1.5">Navigator</text>
+                    </svg>
+                    <h1>Navigator</h1>
+                    <span class="subtitle">Memory Image Explorer</span>
+                </div>
+                <div class="controls">
+                    <button id="theme-toggle-list" class="icon-btn" title="Toggle theme">🌙</button>
+                    <button id="create-memimg-btn" class="primary-button">+ New Memory Image</button>
+                </div>
+            </header>
+            <div id="memimg-list-content" class="list-content"></div>
+        </div>
+
+        <!-- Explorer View (hidden by default) -->
+        <div id="explorer-view" class="view-container" style="display: none;">
+            <!-- Script History Sidebar -->
+            <div id="script-history-sidebar" class="sidebar collapsed">
+                <div class="sidebar-header">
+                    <h3>Script History</h3>
+                    <button id="close-history-btn" class="icon-btn" title="Close history panel">✕</button>
+                </div>
+                <div class="sidebar-controls">
+                    <input type="text" id="history-search" placeholder="Search scripts..." />
+                    <button id="export-history-btn" class="icon-btn" title="Export history">📥</button>
+                    <button id="clear-history-btn" class="icon-btn" title="Clear history">🗑️</button>
+                </div>
+                <div class="sidebar-stats">
+                    <span class="history-stats"></span>
+                </div>
+                <div id="history-list" class="sidebar-content"></div>
+            </div>
+
+            <div class="app-title">Filer Navigator</div>
+
+            <!-- Header -->
+            <header>
+                <div class="logo">
+                    <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"
+                    width="32" height="32" aria-label="Navigator">
+                        <circle cx="24" cy="24" r="22" fill="#6366f1"/>
+                        <line x1="24" y1="14" x2="16" y2="24" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="24" y1="14" x2="32" y2="24" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="16" y1="24" x2="24" y2="34" stroke="#10b981" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="32" y1="24" x2="24" y2="34" stroke="#10b981" stroke-width="2" stroke-linecap="round"/>
+                        <line x1="16" y1="24" x2="32" y2="24" stroke="#ec4899" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="24" cy="14" r="4" fill="#fef3c7"/>
+                        <circle cx="16" cy="24" r="4" fill="#fde68a"/>
+                        <circle cx="32" cy="24" r="4" fill="#fde68a"/>
+                        <circle cx="24" cy="34" r="4" fill="#fef3c7"/>
+                        <circle cx="24" cy="24" r="3" fill="#ffffff"/>
+                        <text x="24" y="43" font-family="Arial, sans-serif"
+                        font-size="5.5" font-weight="bold" fill="#ffffff"
+                        text-anchor="middle" letter-spacing="1.5">Navigator</text>
+                    </svg>
+                    <div class="header-info">
+                        <button id="back-to-list-btn" class="back-button">← Back to List</button>
+                        <h1 id="current-memimg-name">Memory Image</h1>
+                    </div>
+                </div>
+                <div class="controls">
+                    <div class="controls-left">
+                        <button id="theme-toggle-explorer" class="icon-btn" title="Toggle theme">🌙</button>
+                        <span id="dirty-indicator" class="dirty-indicator" style="display: none;">● Unsaved</span>
+                        <button id="save-btn" title="Save to IndexedDB">💾 Save</button>
+                        <button id="discard-btn" title="Discard unsaved changes" style="display: none;">↩️ Discard</button>
+                        <button id="clear-btn" title="Clear all data">🗑️ Clear</button>
+                        <button id="import-events-btn" title="Import snapshot or event log">📥 Import</button>
+                        <button id="export-snapshot-btn" title="Export current state as JSON snapshot">📸 Export Snapshot</button>
+                        <button id="export-events-btn" title="Export full event log as NDJSON">📜 Export Events</button>
+                    </div>
+                    <div class="controls-right">
+                        <button id="load-scott-btn" title="Load example data">📂 Load Example</button>
+                    </div>
+                </div>
+                <!-- Hidden file input for import -->
+                <input type="file" id="events-file-input" accept=".json,.ndjson,.txt" style="display: none">
+                <div id="status" class="status-bar"></div>
+            </header>
+
+            <!-- Code editor (TOP panel) -->
+            <section id="editor-panel" class="panel">
+                <div class="panel-header">
+                    <h2>Code Editor</h2>
+                    <div class="editor-controls">
+                        <button id="toggle-line-numbers-btn" class="icon-btn" title="Toggle line numbers">#</button>
+                        <button id="toggle-history-btn" title="Show script history">📜 History</button>
+                        <button id="run-btn" title="Run code (Ctrl+Enter)">▶ Run</button>
+                    </div>
+                </div>
+                <div class="editor-wrapper">
+                    <div class="line-numbers" id="line-numbers"></div>
+                    <div id="code-editor" class="code-editor" spellcheck="false"></div>
+                </div>
+                <div id="error-panel" class="error-panel" style="display: none;"></div>
+            </section>
+
+            <!-- Vertical resize handle -->
+            <div class="resize-handle resize-handle-horizontal" data-direction="vertical"></div>
+
+            <!-- Bottom panels (Object Graph) -->
+            <main id="bottom-panels">
+                <!-- Tree view (left panel) -->
+                <section id="tree-panel" class="panel">
+                    <div class="panel-header">
+                        <h2>Object Graph</h2>
+                        <div class="nav-buttons">
+                            <button id="back-btn" title="Back (Alt+Left)" disabled>◀</button>
+                            <button id="forward-btn" title="Forward (Alt+Right)" disabled>▶</button>
+                        </div>
+                    </div>
+                    <div id="tree-view" class="panel-content"></div>
+                </section>
+
+                <!-- Horizontal resize handle -->
+                <div class="resize-handle resize-handle-vertical" data-direction="horizontal"></div>
+
+                <!-- Property inspector (right panel) -->
+                <section id="inspector-panel" class="panel">
+                    <div class="panel-header">
+                        <h2>Properties</h2>
+                        <span id="selected-path" class="path-display"></span>
+                    </div>
+                    <div id="inspector-view" class="panel-content"></div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Load main module -->
+    <script type="module" src="../navigator/main.ts"></script>
+</body>
+</html>

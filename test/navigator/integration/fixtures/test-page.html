@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Navigator Integration Test Page</title>
+  <style>
+    /* Minimal styles for testing */
+    body {
+      margin: 0;
+      font-family: monospace;
+    }
+
+    #test-root {
+      padding: 20px;
+    }
+
+    .tree-node {
+      margin-left: 20px;
+    }
+
+    .tree-node-header {
+      padding: 4px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .tree-node-header.selected {
+      background-color: #e0e0e0;
+    }
+
+    .tree-toggle {
+      display: inline-block;
+      width: 12px;
+      margin-right: 4px;
+    }
+
+    .tree-toggle.expanded::before {
+      content: '▼';
+    }
+
+    .tree-toggle.collapsed::before {
+      content: '►';
+    }
+
+    .tree-toggle.leaf::before {
+      content: '•';
+    }
+
+    .tree-children.expanded {
+      display: block;
+    }
+
+    .tree-children.collapsed {
+      display: none;
+    }
+
+    .property-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .property-table th, .property-table td {
+      border: 1px solid #ccc;
+      padding: 4px 8px;
+      text-align: left;
+    }
+
+    .value-navigable {
+      color: blue;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div id="test-root"></div>
+
+  <!-- Load built modules for testing -->
+  <script type="module">
+    // This page can import dist modules for integration testing
+    console.log('Navigator test page loaded');
+  </script>
+</body>
+</html>
