@@ -4,7 +4,19 @@
  * This module centralizes all type detection logic, eliminating the 26+ scattered
  * typeof checks throughout the codebase. Used by serialization, deserialization,
  * and replay modules.
+ *
+ * NOTE: Type guard functions (isPrimitive, isCollection, etc.) are now imported
+ * from foundation layer to eliminate duplication across memimg and navigator.
  */
+
+// Import shared type guards from foundation
+import {
+  isPrimitive as isPrimitiveBase,
+  isCollection as isCollectionBase,
+  isNullish as isNullishBase,
+  isPlainObject as isPlainObjectBase,
+  isObject as isObjectBase,
+} from '../foundation/js-types.js';
 
 // ============================================================================
 // Type Classification Enums
@@ -202,49 +214,43 @@ export function classifyValue(value: unknown): TypeInfo {
 }
 
 // ============================================================================
-// Type Guard Helpers
+// Type Guard Helpers (Re-exported from Foundation)
 // ============================================================================
 
 /**
  * Check if value is null or undefined
+ *
+ * Re-exported from foundation/js-types.ts for backward compatibility.
  */
-export function isNullish(value: unknown): value is null | undefined {
-  return value === null || value === undefined;
-}
+export const isNullish = isNullishBase;
 
 /**
  * Check if value is a primitive (including bigint and symbol)
+ *
+ * Re-exported from foundation/js-types.ts for backward compatibility.
  */
-export function isPrimitive(value: unknown): boolean {
-  if (value === null || value === undefined) return true;
-  const type = typeof value;
-  return type === 'string' || type === 'number' || type === 'boolean' ||
-         type === 'bigint' || type === 'symbol';
-}
+export const isPrimitive = isPrimitiveBase;
 
 /**
  * Check if value is a plain object (not null, not array, not special objects)
+ *
+ * Re-exported from foundation/js-types.ts for backward compatibility.
  */
-export function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' &&
-         !(value instanceof Date) && !Array.isArray(value) &&
-         !(value instanceof Map) && !(value instanceof Set);
-}
+export const isPlainObject = isPlainObjectBase;
 
 /**
  * Check if value is a collection (Array, Map, or Set)
+ *
+ * Re-exported from foundation/js-types.ts for backward compatibility.
  */
-export function isCollection(value: unknown): value is unknown[] | Map<unknown, unknown> | Set<unknown> {
-  return Array.isArray(value) || value instanceof Map || value instanceof Set;
-}
+export const isCollection = isCollectionBase;
 
 /**
  * Check if value is an object (not null)
  *
  * This is the memimg-standard object check used throughout the codebase.
  * Note: Functions are considered objects for consistency with classifyValue.
+ *
+ * Re-exported from foundation/js-types.ts for backward compatibility.
  */
-export function isObject(value: unknown): value is object {
-  const type = typeof value;
-  return (type === 'object' && value !== null) || type === 'function';
-}
+export const isObject = isObjectBase;
