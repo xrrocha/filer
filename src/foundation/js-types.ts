@@ -45,3 +45,34 @@ export function isPrimitive(value: unknown): boolean {
   return type === 'string' || type === 'number' || type === 'boolean' ||
          type === 'bigint' || type === 'symbol';
 }
+
+// ============================================================================
+// Collection Type Detection
+// ============================================================================
+
+/**
+ * Check if value is a collection (Array, Map, or Set)
+ *
+ * Collections are container objects that hold multiple values:
+ * - Array (indexed collection)
+ * - Map (key-value pairs)
+ * - Set (unique values)
+ *
+ * Note: WeakMap and WeakSet are NOT considered collections here
+ * as they're not iterable and can't be serialized.
+ *
+ * @param value - Value to check
+ * @returns true if value is Array, Map, or Set
+ *
+ * @example
+ * ```typescript
+ * isCollection([1, 2, 3])          // true
+ * isCollection(new Map())          // true
+ * isCollection(new Set())          // true
+ * isCollection({})                 // false
+ * isCollection(new WeakMap())      // false
+ * ```
+ */
+export function isCollection(value: unknown): value is unknown[] | Map<unknown, unknown> | Set<unknown> {
+  return Array.isArray(value) || value instanceof Map || value instanceof Set;
+}
