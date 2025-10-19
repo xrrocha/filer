@@ -145,8 +145,14 @@ function serializeValue(
   cycleTracker: CycleTracker,
   proxyToTarget: WeakMap<object, object>,
 ): SerializedValue {
-  // Classify the value once
-  const typeInfo = classifyValue(value);
+  // CRITICAL FIX: Unwrap proxies BEFORE classification
+  // This ensures instanceof checks work correctly for Date, Map, Set, etc.
+  const unwrapped = (typeof value === 'object' && value !== null)
+    ? (proxyToTarget.get(value as object) || value)
+    : value;
+
+  // Classify the unwrapped value
+  const typeInfo = classifyValue(unwrapped);
 
   // Handle based on category
   switch (typeInfo.category) {
