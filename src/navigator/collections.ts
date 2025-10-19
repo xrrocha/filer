@@ -10,6 +10,9 @@
  * - renderSetChildren (15 lines)
  *
  * This adapter pattern reduces these to a single unified renderer.
+ *
+ * NOTE: isCollection() is now imported from foundation layer to eliminate
+ * duplication across memimg, navigator/value-types, and collections.
  */
 
 import type { PathArray } from "./navigation.js";
@@ -135,7 +138,7 @@ export function getCollectionAdapter(collection: unknown): CollectionAdapter | n
 
 /**
  * Check if a value is a collection (Array/Map/Set)
+ *
+ * Re-exported from foundation/js-types.ts for backward compatibility.
  */
-export function isCollection(value: unknown): boolean {
-  return Array.isArray(value) || value instanceof Map || value instanceof Set;
-}
+export { isCollection } from '../foundation/js-types.js';
