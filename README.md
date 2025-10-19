@@ -137,6 +137,8 @@ const root2 = await replayEventsFromLog({ eventLog });
 
 **Quality**: 913 tests, 94.74% code coverage, 100% passing
 
+For a brief discussion of the theoretical underpinnings of `memimg` please read the [Filer's Memory Image Theoretical Foundations](./docs/memimg-theory.md) ([PDF](./docs/memimg-theory.pdf)).
+
 ---
 
 ### Navigator: Interactive Domain Explorer
