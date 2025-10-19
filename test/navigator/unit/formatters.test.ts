@@ -295,7 +295,7 @@ describe('formatters', () => {
       assert.equal(info.category, ValueCategory.DATE);
       assert.equal(info.typeName, 'Date');
       assert.equal(info.cssClass, 'value-date');
-      assert.equal(info.isNavigable, false);
+      assert.equal(info.isNavigable, true);  // Changed: Dates can have properties now
     });
   });
 

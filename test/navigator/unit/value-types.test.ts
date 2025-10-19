@@ -132,7 +132,7 @@ describe('Value Types', () => {
       assert.equal(info.category, ValueCategory.DATE);
       assert.equal(info.typeName, 'Date');
       assert.equal(info.cssClass, 'value-date');
-      assert.equal(info.isNavigable, false);
+      assert.equal(info.isNavigable, true);  // Changed: Dates can have properties now
     });
 
     it('classifies invalid Date', () => {
@@ -516,8 +516,8 @@ describe('Value Types', () => {
       assert.equal(classifyValue(Symbol('test')).isNavigable, false);
     });
 
-    it('marks Date as non-navigable', () => {
-      assert.equal(classifyValue(new Date()).isNavigable, false);
+    it('marks Date as navigable', () => {
+      assert.equal(classifyValue(new Date()).isNavigable, true);  // Changed: Dates can have properties now
     });
 
     it('marks objects as navigable', () => {
