@@ -178,7 +178,8 @@ export function classifyValue(value: unknown): ValueInfo {
 
   // Date (check before generic object)
   // Dates can now have properties, so they need to be navigable
-  if (value instanceof Date) {
+  // Use isDateLike to work with both direct and proxied Dates
+  if (isDateLike(value)) {
     return {
       category: ValueCategory.DATE,
       typeName: 'Date',
@@ -278,6 +279,28 @@ export function isPrimitive(value: unknown): boolean {
 }
 
 /**
+ * Check if value is a Date (works with both direct Dates and proxied Dates)
+ *
+ * This is needed because `instanceof Date` doesn't work with proxied Dates.
+ * We check for the presence of Date-specific methods instead.
+ *
+ * @param value - The value to check
+ * @returns true if value is a Date (direct or proxied)
+ */
+export function isDateLike(value: unknown): boolean {
+  if (value === null || value === undefined) return false;
+  if (typeof value !== 'object') return false;
+
+  // Direct instanceof check (fast path for non-proxied Dates)
+  if (value instanceof Date) return true;
+
+  // Proxy-aware check: Look for Date-specific methods
+  // Using getTime() as the signature method (all Dates have it)
+  return typeof (value as any).getTime === 'function' &&
+         typeof (value as any).toISOString === 'function';
+}
+
+/**
  * Check if value is a leaf-like object (contains only scalars/Dates)
  *
  * Phase 13: These objects are good candidates for inline expansion in the inspector.
@@ -306,7 +329,7 @@ export function isLeafLikeObject(value: unknown): boolean {
 
   // Date objects can be leaf-like if they have scalar properties
   // (The Date timestamp is internal and doesn't count as a property)
-  if (value instanceof Date) {
+  if (isDateLike(value)) {
     // Empty Date (no properties) is not leaf-like (just show the timestamp)
     if (entries.length === 0) return false;
     // Date with too many properties is not leaf-like
@@ -320,7 +343,7 @@ export function isLeafLikeObject(value: unknown): boolean {
     if (v === null || v === undefined) return true;
     const type = typeof v;
     if (type === 'string' || type === 'number' || type === 'boolean' || type === 'bigint') return true;
-    if (v instanceof Date) return true;
+    if (isDateLike(v)) return true;
     return false;
   });
 }

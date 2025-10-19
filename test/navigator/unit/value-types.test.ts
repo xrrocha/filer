@@ -11,6 +11,7 @@ import {
   classifyValue,
   ValueCategory,
   isLeafLikeObject,
+  isDateLike,
 } from '../../../dist/navigator/value-types.js';
 import { FORMAT_TEST_VALUES } from './fixtures/test-data.js';
 
@@ -538,6 +539,64 @@ describe('Value Types', () => {
     it('marks functions as navigable', () => {
       assert.equal(classifyValue(() => {}).isNavigable, true);
       assert.equal(classifyValue(function() {}).isNavigable, true);
+    });
+  });
+
+  // ==========================================================================
+  // isDateLike() - Proxy-aware Date detection
+  // ==========================================================================
+
+  describe('isDateLike', () => {
+    it('returns true for direct Date instances', () => {
+      assert.equal(isDateLike(new Date()), true);
+      assert.equal(isDateLike(new Date('2024-01-01')), true);
+    });
+
+    it('returns true for proxied Dates', () => {
+      const date = new Date('2024-01-01');
+      const proxy = new Proxy(date, {
+        get(target, prop) {
+          return target[prop as keyof Date];
+        }
+      });
+      assert.equal(isDateLike(proxy), true);
+    });
+
+    it('returns false for null and undefined', () => {
+      assert.equal(isDateLike(null), false);
+      assert.equal(isDateLike(undefined), false);
+    });
+
+    it('returns false for primitives', () => {
+      assert.equal(isDateLike(42), false);
+      assert.equal(isDateLike('2024-01-01'), false);
+      assert.equal(isDateLike(true), false);
+      assert.equal(isDateLike(BigInt(123)), false);
+      assert.equal(isDateLike(Symbol('test')), false);
+    });
+
+    it('returns false for non-Date objects', () => {
+      assert.equal(isDateLike({}), false);
+      assert.equal(isDateLike({ getTime: 123 }), false);  // Not a function
+      assert.equal(isDateLike([]), false);
+      assert.equal(isDateLike(new Map()), false);
+      assert.equal(isDateLike(new Set()), false);
+    });
+
+    it('returns false for objects with only getTime', () => {
+      assert.equal(isDateLike({ getTime: () => 123 }), false);  // Missing toISOString
+    });
+
+    it('returns false for objects with only toISOString', () => {
+      assert.equal(isDateLike({ toISOString: () => '2024' }), false);  // Missing getTime
+    });
+
+    it('returns true for Date-like objects with both methods', () => {
+      const dateLike = {
+        getTime: () => 1234567890,
+        toISOString: () => '2024-01-01T00:00:00.000Z'
+      };
+      assert.equal(isDateLike(dateLike), true);
     });
   });
 });

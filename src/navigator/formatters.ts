@@ -8,7 +8,7 @@
  * Styling is handled via CSS classes defined in navigator.css.
  */
 
-import { classifyValue, ValueCategory } from './value-types.js';
+import { classifyValue, ValueCategory, isDateLike } from './value-types.js';
 import type { ValueInfo } from './value-types.js';
 import { UI_CONFIG, INTERNAL_PREFIX, LABEL_PATTERN } from './constants.js';
 
@@ -356,9 +356,9 @@ export function inferLabel(obj: unknown): string {
     return String(obj);
   }
 
-  // Handle Date (primitive-like)
-  if (obj instanceof Date) {
-    return obj.toISOString();
+  // Handle Date (primitive-like) - works with both direct and proxied Dates
+  if (isDateLike(obj)) {
+    return (obj as Date).toISOString();
   }
 
   // Handle collections
@@ -384,7 +384,7 @@ export function inferLabel(obj: unknown): string {
         // Direct string match
         matches.push(value);
       } else if (value !== null && typeof value === 'object' &&
-                 !(value instanceof Date) && !Array.isArray(value) &&
+                 !isDateLike(value) && !Array.isArray(value) &&
                  !(value instanceof Map) && !(value instanceof Set)) {
         // Nested object: recurse to extract label
         const nestedLabel = inferLabel(value);
