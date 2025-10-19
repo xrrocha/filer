@@ -152,6 +152,24 @@ export interface Transaction {
    * Discards all changes made after the checkpoint was created
    */
   restoreCheckpoint(checkpoint: Map<string, unknown>): void;
+
+  /**
+   * Unwrap a transaction proxy to get the underlying value
+   *
+   * Useful for type detection when proxies hide the true type.
+   * For example, checking if a proxied value is actually a Date.
+   *
+   * @param value - Value to unwrap (may be a proxy or raw value)
+   * @returns The underlying value without proxy wrapping
+   *
+   * @example
+   * ```typescript
+   * const dateProxy = txn.root.user.hiredate;
+   * const unwrapped = txn.unwrap(dateProxy);
+   * console.log(unwrapped instanceof Date); // true
+   * ```
+   */
+  unwrap(value: unknown): unknown;
 }
 
 /**
@@ -277,6 +295,12 @@ export async function createTransaction(
 
     restoreCheckpoint(checkpoint: Map<string, unknown>): void {
       deltaManager.restoreCheckpoint(checkpoint);
+    },
+
+    unwrap(value: unknown): unknown {
+      // Use deepUnwrap to recursively unwrap transaction proxies
+      // Pass empty seen map for each call (stateless unwrapping)
+      return deepUnwrap(value, targetCache);
     },
   };
 }

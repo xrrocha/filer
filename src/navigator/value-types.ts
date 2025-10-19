@@ -9,6 +9,34 @@
 import { CSS_CLASSES, DISPLAY_ICONS } from './constants.js';
 
 // ============================================================================
+// Transaction Proxy Unwrapping
+// ============================================================================
+
+/**
+ * Function to unwrap transaction proxies to reveal underlying values
+ * Set by navigator/main.ts when transaction is created
+ */
+let unwrapFunction: ((value: unknown) => unknown) | null = null;
+
+/**
+ * Set the unwrap function for transaction proxy unwrapping
+ * Called by navigator/main.ts when transaction is created
+ */
+export function setUnwrapFunction(fn: (value: unknown) => unknown): void {
+  unwrapFunction = fn;
+}
+
+/**
+ * Unwrap a value if unwrap function is available, otherwise return as-is
+ *
+ * This is used internally by isDateLike() and can be used by formatters
+ * to access the underlying value when working with transaction proxies.
+ */
+export function unwrapIfPossible(value: unknown): unknown {
+  return unwrapFunction ? unwrapFunction(value) : value;
+}
+
+// ============================================================================
 // Value Categories
 // ============================================================================
 
@@ -282,7 +310,7 @@ export function isPrimitive(value: unknown): boolean {
  * Check if value is a Date (works with both direct Dates and proxied Dates)
  *
  * This is needed because `instanceof Date` doesn't work with proxied Dates.
- * We check for the presence of Date-specific methods instead.
+ * We unwrap transaction proxies recursively to reveal the underlying Date.
  *
  * @param value - The value to check
  * @returns true if value is a Date (direct or proxied)
@@ -294,8 +322,30 @@ export function isDateLike(value: unknown): boolean {
   // Direct instanceof check (fast path for non-proxied Dates)
   if (value instanceof Date) return true;
 
-  // Proxy-aware check: Look for Date-specific methods
-  // Using getTime() as the signature method (all Dates have it)
+  // CRITICAL FIX: Recursively unwrap nested proxies (transaction + ObjectType)
+  // Keep unwrapping until we find a Date or can't unwrap anymore
+  let current: unknown = value;
+  for (let i = 0; i < 5; i++) {  // Max 5 layers to prevent infinite loops
+    const unwrapped = unwrapIfPossible(current);
+    if (unwrapped === current) break;  // No more unwrapping possible
+    if (unwrapped instanceof Date) return true;
+    if (typeof unwrapped !== 'object' || unwrapped === null) break;
+    current = unwrapped;
+  }
+
+  // Check prototype chain for Date.prototype
+  // This handles ObjectType proxies that wrap Dates
+  try {
+    let proto = Object.getPrototypeOf(value);
+    while (proto !== null) {
+      if (proto === Date.prototype) return true;
+      proto = Object.getPrototypeOf(proto);
+    }
+  } catch (e) {
+    // getPrototypeOf can throw on some exotic objects
+  }
+
+  // Fallback: check for Date-specific methods (for non-transaction proxies)
   return typeof (value as any).getTime === 'function' &&
          typeof (value as any).toISOString === 'function';
 }

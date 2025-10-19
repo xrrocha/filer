@@ -23,6 +23,7 @@ import { renderTree } from "./ui/tree.js";
 import { renderInspectorWithTabs } from "./ui/inspector.js";
 import { setupEditor, runCode, setRefreshHistoryCallback, toggleLineNumbers, setEditorContent } from "./ui/editor.js";
 import { renderMemImageList, showCreateDialog } from "./ui/memimg-list.js";
+import { setUnwrapFunction } from "./value-types.js";
 import {
   getMemoryImage,
   getEventStoreName,
@@ -467,6 +468,9 @@ async function clearAll(): Promise<void> {
     root = txn.root;
     (window as any).root = root;
 
+    // Wire unwrap function for Date detection
+    setUnwrapFunction(txn.unwrap.bind(txn));
+
     // Reset navigation to initial state
     navigation.reset();
 
@@ -511,9 +515,11 @@ function serializeEvent(event: any): any {
     }
     seen.add(value);
 
-    // Handle Date
-    if (value instanceof Date) {
-      return { __type__: "date", value: value.toISOString() };
+    // Handle Date (unwrap transaction proxies first)
+    // Need to check unwrapped value since transaction proxies hide instanceof
+    const unwrapped = txn?.unwrap(value) || value;
+    if (unwrapped instanceof Date) {
+      return { __type__: "date", value: unwrapped.toISOString() };
     }
 
     // Handle Array
@@ -802,6 +808,9 @@ async function importEvents(file: File): Promise<void> {
       root = txn.root;
       (window as any).root = root;
 
+      // Wire unwrap function for Date detection
+      setUnwrapFunction(txn.unwrap.bind(txn));
+
       // Reset navigation to initial state
       navigation.reset();
 
@@ -859,6 +868,9 @@ async function importEvents(file: File): Promise<void> {
       txn = await createTransaction(persistentEventLog);
       root = txn.root;
       (window as any).root = root;
+
+      // Wire unwrap function for Date detection
+      setUnwrapFunction(txn.unwrap.bind(txn));
 
       // Reset navigation to initial state
       navigation.reset();
@@ -1123,6 +1135,9 @@ async function openMemoryImage(id: string): Promise<void> {
 
     // Expose root globally for user scripts
     (window as any).root = root;
+
+    // Wire unwrap function for Date detection
+    setUnwrapFunction(txn.unwrap.bind(txn));
 
     // Set up navigation callback
     navigation.onNavigate = render;

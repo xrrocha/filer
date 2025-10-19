@@ -8,7 +8,7 @@
  * Styling is handled via CSS classes defined in navigator.css.
  */
 
-import { classifyValue, ValueCategory, isDateLike } from './value-types.js';
+import { classifyValue, ValueCategory, isDateLike, unwrapIfPossible } from './value-types.js';
 import type { ValueInfo } from './value-types.js';
 import { UI_CONFIG, INTERNAL_PREFIX, LABEL_PATTERN } from './constants.js';
 
@@ -188,11 +188,14 @@ class DateFormatter implements ValueFormatter {
   }
 
   formatPreview(value: unknown): string {
-    const date = value as Date;
-    const isoString = isNaN(date.getTime()) ? 'Invalid Date' : date.toISOString();
+    // CRITICAL FIX: Unwrap transaction proxy to access Date methods
+    // Transaction proxies hide Date.prototype methods, so we must unwrap first
+    const unwrapped = unwrapIfPossible(value) as Date;
+    const isoString = isNaN(unwrapped.getTime()) ? 'Invalid Date' : unwrapped.toISOString();
 
     // Count user-defined properties (excluding internal metadata)
-    const propCount = Object.keys(date).filter(k => !k.startsWith('__')).length;
+    // Check the original value for properties (may include custom Date properties)
+    const propCount = Object.keys(value as object).filter(k => !k.startsWith('__')).length;
 
     // If Date has properties, show count
     if (propCount > 0) {
@@ -203,11 +206,12 @@ class DateFormatter implements ValueFormatter {
   }
 
   formatFull(value: unknown): string {
-    const date = value as Date;
-    const isoString = isNaN(date.getTime()) ? 'Invalid Date' : date.toISOString();
+    // CRITICAL FIX: Unwrap transaction proxy to access Date methods
+    const unwrapped = unwrapIfPossible(value) as Date;
+    const isoString = isNaN(unwrapped.getTime()) ? 'Invalid Date' : unwrapped.toISOString();
 
-    // Count user-defined properties
-    const propCount = Object.keys(date).filter(k => !k.startsWith('__')).length;
+    // Count user-defined properties on the original value
+    const propCount = Object.keys(value as object).filter(k => !k.startsWith('__')).length;
 
     // If Date has properties, show count
     if (propCount > 0) {
@@ -358,7 +362,9 @@ export function inferLabel(obj: unknown): string {
 
   // Handle Date (primitive-like) - works with both direct and proxied Dates
   if (isDateLike(obj)) {
-    return (obj as Date).toISOString();
+    // CRITICAL FIX: Unwrap transaction proxy before calling toISOString()
+    const unwrapped = unwrapIfPossible(obj) as Date;
+    return unwrapped.toISOString();
   }
 
   // Handle collections
@@ -423,6 +429,19 @@ class ObjectFormatter implements ValueFormatter {
 
   formatPreview(value: unknown, maxLength = UI_CONFIG.MAX_PREVIEW_LENGTH): string {
     const obj = value as Record<string, unknown>;
+
+    // CRITICAL FIX: Check if this is actually a Date wrapped by ObjectType proxy
+    // If unwrapping reveals a Date, format it as such
+    const unwrapped = unwrapIfPossible(value);
+    if (unwrapped instanceof Date) {
+      const isoString = isNaN(unwrapped.getTime()) ? 'Invalid Date' : unwrapped.toISOString();
+      // Count visible properties on the original (proxied) value
+      const propCount = Object.keys(obj).filter(k => !k.startsWith('__')).length;
+      if (propCount > 0) {
+        return `${isoString} {${propCount}}`;
+      }
+      return isoString;
+    }
 
     // Try label inference first
     const label = inferLabel(obj);
