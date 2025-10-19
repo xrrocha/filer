@@ -18,7 +18,7 @@ Filer empowers you to **define and enact your own domains locally**—without se
 
 **Zero installation. Zero configuration. Zero server.**
 
-1. Download [`dist/index.html`](dist/index.html) (135KB, self-contained)
+1. Download [`dist/index.html`](dist/index.html) (140KB, self-contained)
 2. Open in your browser (works with `file://` protocol—no server needed)
 3. Click **"Load Example"** to explore the classic EMP/DEPT schema
 4. Navigate the object graph, inspect values, execute JavaScript in the REPL
@@ -77,7 +77,7 @@ In a hurry? Keep reading!
 - **Pure JavaScript**: No external libraries in production code
 - **Zero npm packages at runtime**: Self-contained, no dependency hell
 - **No build tools required to run**: Open `dist/index.html` and go
-- **Single 135KB file**: Everything inlined—HTML, CSS, JavaScript
+- **Single 140KB file**: Everything inlined—HTML, CSS, JavaScript
 
 ### 100% In-Browser
 
@@ -298,7 +298,7 @@ filer/
 │   └── integration/        # Cross-component tests
 │
 └── dist/
-    └── index.html          # Single-file deployable app (135KB)
+    └── index.html          # Single-file deployable app (140KB)
 ```
 
 ---
