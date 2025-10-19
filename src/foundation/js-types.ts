@@ -76,3 +76,100 @@ export function isPrimitive(value: unknown): boolean {
 export function isCollection(value: unknown): value is unknown[] | Map<unknown, unknown> | Set<unknown> {
   return Array.isArray(value) || value instanceof Map || value instanceof Set;
 }
+
+// ============================================================================
+// Nullish Value Detection
+// ============================================================================
+
+/**
+ * Check if value is null or undefined
+ *
+ * Convenient helper for checking nullish values.
+ * Useful for early exits and validation.
+ *
+ * @param value - Value to check
+ * @returns true if value is null or undefined
+ *
+ * @example
+ * ```typescript
+ * isNullish(null)        // true
+ * isNullish(undefined)   // true
+ * isNullish(0)           // false
+ * isNullish('')          // false
+ * isNullish(false)       // false
+ * ```
+ */
+export function isNullish(value: unknown): value is null | undefined {
+  return value === null || value === undefined;
+}
+
+// ============================================================================
+// Plain Object Detection
+// ============================================================================
+
+/**
+ * Check if value is a plain object (not null, not array, not special objects)
+ *
+ * Plain objects are ordinary objects created via object literals or Object.create:
+ * - {}
+ * - { a: 1 }
+ * - Object.create(null)
+ *
+ * NOT plain objects:
+ * - Arrays, Date, Map, Set, etc. (special object types)
+ * - Functions (callable objects)
+ *
+ * @param value - Value to check
+ * @returns true if value is a plain object
+ *
+ * @example
+ * ```typescript
+ * isPlainObject({})              // true
+ * isPlainObject({ a: 1 })        // true
+ * isPlainObject(Object.create(null)) // true
+ * isPlainObject([])              // false
+ * isPlainObject(new Date())      // false
+ * isPlainObject(null)            // false
+ * ```
+ */
+export function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' &&
+         !(value instanceof Date) && !Array.isArray(value) &&
+         !(value instanceof Map) && !(value instanceof Set) &&
+         !(value instanceof RegExp);
+}
+
+// ============================================================================
+// Object Detection
+// ============================================================================
+
+/**
+ * Check if value is an object (not null, includes functions)
+ *
+ * In JavaScript, (almost) everything that's not a primitive is an object:
+ * - Plain objects: {}
+ * - Arrays: []
+ * - Date, Map, Set, etc.
+ * - Functions (callable objects)
+ *
+ * This is the memimg-standard object check used throughout the codebase.
+ * Note: Functions are considered objects for consistency with JavaScript semantics.
+ *
+ * @param value - Value to check
+ * @returns true if value is an object (including functions)
+ *
+ * @example
+ * ```typescript
+ * isObject({})              // true
+ * isObject([])              // true
+ * isObject(new Date())      // true
+ * isObject(() => {})        // true (functions are objects)
+ * isObject(null)            // false
+ * isObject(undefined)       // false
+ * isObject(42)              // false
+ * ```
+ */
+export function isObject(value: unknown): value is object {
+  const type = typeof value;
+  return (type === 'object' && value !== null) || type === 'function';
+}

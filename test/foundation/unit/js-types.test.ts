@@ -14,7 +14,7 @@
 
 import { describe, it } from 'node:test';
 import { strict as assert } from 'node:assert';
-import { isPrimitive, isCollection } from '../../../dist/foundation/js-types.js';
+import { isPrimitive, isCollection, isNullish, isPlainObject, isObject } from '../../../dist/foundation/js-types.js';
 
 describe('foundation/js-types', () => {
   describe('isPrimitive', () => {
@@ -181,6 +181,142 @@ describe('foundation/js-types', () => {
     it('returns false for RegExp', () => {
       assert.equal(isCollection(/test/), false);
       assert.equal(isCollection(new RegExp('test')), false);
+    });
+  });
+
+  describe('isNullish', () => {
+    it('returns true for null', () => {
+      assert.equal(isNullish(null), true);
+    });
+
+    it('returns true for undefined', () => {
+      assert.equal(isNullish(undefined), true);
+    });
+
+    it('returns false for 0', () => {
+      assert.equal(isNullish(0), false);
+    });
+
+    it('returns false for empty string', () => {
+      assert.equal(isNullish(''), false);
+    });
+
+    it('returns false for false', () => {
+      assert.equal(isNullish(false), false);
+    });
+
+    it('returns false for NaN', () => {
+      assert.equal(isNullish(NaN), false);
+    });
+
+    it('returns false for objects', () => {
+      assert.equal(isNullish({}), false);
+      assert.equal(isNullish([]), false);
+      assert.equal(isNullish(new Date()), false);
+    });
+  });
+
+  describe('isPlainObject', () => {
+    it('returns true for empty object literal', () => {
+      assert.equal(isPlainObject({}), true);
+    });
+
+    it('returns true for non-empty object literal', () => {
+      assert.equal(isPlainObject({ a: 1 }), true);
+      assert.equal(isPlainObject({ a: 1, b: 2 }), true);
+    });
+
+    it('returns true for object with null prototype', () => {
+      assert.equal(isPlainObject(Object.create(null)), true);
+    });
+
+    it('returns false for null', () => {
+      assert.equal(isPlainObject(null), false);
+    });
+
+    it('returns false for undefined', () => {
+      assert.equal(isPlainObject(undefined), false);
+    });
+
+    it('returns false for primitives', () => {
+      assert.equal(isPlainObject('hello'), false);
+      assert.equal(isPlainObject(42), false);
+      assert.equal(isPlainObject(true), false);
+    });
+
+    it('returns false for Date', () => {
+      assert.equal(isPlainObject(new Date()), false);
+    });
+
+    it('returns false for arrays', () => {
+      assert.equal(isPlainObject([]), false);
+      assert.equal(isPlainObject([1, 2]), false);
+    });
+
+    it('returns false for Map', () => {
+      assert.equal(isPlainObject(new Map()), false);
+    });
+
+    it('returns false for Set', () => {
+      assert.equal(isPlainObject(new Set()), false);
+    });
+
+    it('returns false for functions', () => {
+      assert.equal(isPlainObject(() => {}), false);
+    });
+
+    it('returns false for RegExp', () => {
+      assert.equal(isPlainObject(/test/), false);
+    });
+  });
+
+  describe('isObject', () => {
+    it('returns true for plain objects', () => {
+      assert.equal(isObject({}), true);
+      assert.equal(isObject({ a: 1 }), true);
+    });
+
+    it('returns true for arrays', () => {
+      assert.equal(isObject([]), true);
+      assert.equal(isObject([1, 2]), true);
+    });
+
+    it('returns true for Date', () => {
+      assert.equal(isObject(new Date()), true);
+    });
+
+    it('returns true for Map', () => {
+      assert.equal(isObject(new Map()), true);
+    });
+
+    it('returns true for Set', () => {
+      assert.equal(isObject(new Set()), true);
+    });
+
+    it('returns true for functions', () => {
+      assert.equal(isObject(() => {}), true);
+      assert.equal(isObject(function() {}), true);
+      assert.equal(isObject(function named() {}), true);
+    });
+
+    it('returns true for RegExp', () => {
+      assert.equal(isObject(/test/), true);
+    });
+
+    it('returns false for null', () => {
+      assert.equal(isObject(null), false);
+    });
+
+    it('returns false for undefined', () => {
+      assert.equal(isObject(undefined), false);
+    });
+
+    it('returns false for primitives', () => {
+      assert.equal(isObject('hello'), false);
+      assert.equal(isObject(42), false);
+      assert.equal(isObject(true), false);
+      assert.equal(isObject(123n), false);
+      assert.equal(isObject(Symbol()), false);
     });
   });
 });
