@@ -13,5 +13,35 @@
  * - Type-safe guards where applicable
  */
 
-// Placeholder - will be populated in subsequent checkpoints
-// Functions will be added via TDD: tests first, then implementation
+// ============================================================================
+// Primitive Type Detection
+// ============================================================================
+
+/**
+ * Check if value is a primitive (including null, undefined, bigint, symbol)
+ *
+ * Primitives are immutable values that are not objects:
+ * - null, undefined
+ * - string, number, boolean
+ * - bigint, symbol
+ *
+ * @param value - Value to check
+ * @returns true if value is a primitive
+ *
+ * @example
+ * ```typescript
+ * isPrimitive(42)           // true
+ * isPrimitive('hello')      // true
+ * isPrimitive(null)         // true
+ * isPrimitive(123n)         // true
+ * isPrimitive(Symbol())     // true
+ * isPrimitive({})           // false
+ * isPrimitive([])           // false
+ * ```
+ */
+export function isPrimitive(value: unknown): boolean {
+  if (value === null || value === undefined) return true;
+  const type = typeof value;
+  return type === 'string' || type === 'number' || type === 'boolean' ||
+         type === 'bigint' || type === 'symbol';
+}
