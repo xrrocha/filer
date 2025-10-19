@@ -8,8 +8,6 @@
 
 ---
 
-*Este documento está también disponible [en español](./README-es.md) e também disponível [em português](./README-pt.md).*
-
 ## Vision: Autonomous Domain Modeling
 
 Filer empowers you to **define and enact your own domains locally**—without servers, databases, or infrastructure—while enabling seamless sharing and collaboration. Model your domain conceptually (e.g. *Employee, Department, Salary*), and Filer **synthesizes** the persistence layer, validation logic, and rich UI automatically. Change your schema? The system adapts instantly. Your data and metadata coexist in the same memory image, eliminating the schema/data divide that plagues traditional systems.
@@ -67,10 +65,6 @@ The complete vision is still work in progress but it works and can be tested now
 ---
 
 **Intrigued? Interested but skeptical?** Take a look at [Filer's vision in a nutshell](./docs/vision-in-a-nutshell.md) (somewhat long: ~20 pages). The brave and the curious may also want to peruse the  [Filer's complete vision](./docs/vision.md) (decidedly long: worth-reading 56 pages exploring the 40-year arc from UNIFILE to Prevayler to Filer, and why this convergence moment matters).
-
-Visión completa [en español](./docs/vision-es.md) ([PDF](./docs/vision-es.pdf)).
-
-Visão completa [em português](./docs/visao-pt.md) ([PDF](./docs/visao-pt.pdf)).
 
 In a hurry? Keep reading!
 
