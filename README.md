@@ -18,7 +18,7 @@ Filer empowers you to **define and enact your own domains locally**—without se
 
 **Zero installation. Zero configuration. Zero server.**
 
-1. Download [`dist/index.html`](dist/index.html) (118KB, self-contained)
+1. Download [`dist/index.html`](dist/index.html) (135KB, self-contained)
 2. Open in your browser (works with `file://` protocol—no server needed)
 3. Click **"Load Example"** to explore the classic EMP/DEPT schema
 4. Navigate the object graph, inspect values, execute JavaScript in the REPL
@@ -64,7 +64,7 @@ The complete vision is still work in progress but it works and can be tested now
 
 ---
 
-**Intrigued? Interested but skeptical?** Take a look at [Filer's vision in a nutshell](./docs/vision-in-a-nutshell.md) (somewhat long: ~20 pages). The brave and the curious may also want to peruse the  [Filer's complete vision](./docs/vision.md) (decidedly long: worth-reading 56 pages exploring the 40-year arc from UNIFILE to Prevayler to Filer, and why this convergence moment matters).
+**Intrigued? Interested but skeptical?** Take a look at [Filer's vision in a nutshell](./docs/vision-in-a-nutshell.md). The brave and the curious may also want to peruse the  [Filer's complete vision](./docs/vision.md) ([PDF](./docs/vision.pdf)) (longer but worth-reading as it explores the 40-year arc from UNIFILE to Prevayler to Filer, and why this convergence moment matters).
 
 In a hurry? Keep reading!
 
@@ -77,7 +77,7 @@ In a hurry? Keep reading!
 - **Pure JavaScript**: No external libraries in production code
 - **Zero npm packages at runtime**: Self-contained, no dependency hell
 - **No build tools required to run**: Open `dist/index.html` and go
-- **Single 118KB file**: Everything inlined—HTML, CSS, JavaScript
+- **Single 135KB file**: Everything inlined—HTML, CSS, JavaScript
 
 ### 100% In-Browser
 
@@ -298,7 +298,7 @@ filer/
 │   └── integration/        # Cross-component tests
 │
 └── dist/
-    └── index.html          # Single-file deployable app (118KB)
+    └── index.html          # Single-file deployable app (135KB)
 ```
 
 ---

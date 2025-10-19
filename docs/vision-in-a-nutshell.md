@@ -1,6 +1,6 @@
 # Filer: A Theory of Unified Memory Images (In a Nutshell)
 
-**An 8-page condensation of the complete vision**
+**A condensation of the complete vision**
 
 ---
 
