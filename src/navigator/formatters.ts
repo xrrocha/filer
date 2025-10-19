@@ -189,12 +189,32 @@ class DateFormatter implements ValueFormatter {
 
   formatPreview(value: unknown): string {
     const date = value as Date;
-    return isNaN(date.getTime()) ? 'Invalid Date' : date.toISOString();
+    const isoString = isNaN(date.getTime()) ? 'Invalid Date' : date.toISOString();
+
+    // Count user-defined properties (excluding internal metadata)
+    const propCount = Object.keys(date).filter(k => !k.startsWith('__')).length;
+
+    // If Date has properties, show count
+    if (propCount > 0) {
+      return `${isoString} {${propCount}}`;
+    }
+
+    return isoString;
   }
 
   formatFull(value: unknown): string {
     const date = value as Date;
-    return isNaN(date.getTime()) ? 'Invalid Date' : date.toISOString();
+    const isoString = isNaN(date.getTime()) ? 'Invalid Date' : date.toISOString();
+
+    // Count user-defined properties
+    const propCount = Object.keys(date).filter(k => !k.startsWith('__')).length;
+
+    // If Date has properties, show count
+    if (propCount > 0) {
+      return `Date(${isoString}) {${propCount}}`;
+    }
+
+    return isoString;
   }
 }
 

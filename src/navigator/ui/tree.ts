@@ -17,8 +17,8 @@ import { isCollection, getCollectionAdapter } from "../collections.js";
  */
 function shouldShowInTree(value: unknown): boolean {
   if (value === null || value === undefined) return false;
-  // Date, though an object, is treated as a primitive - don't show in tree
-  if (value instanceof Date) return false;
+  // Dates can now have properties and should be navigable
+  // They will appear in the tree if they have user-defined properties
   const type = typeof value;
   return type === "object" || type === "function";
 }

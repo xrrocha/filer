@@ -177,11 +177,12 @@ export function classifyValue(value: unknown): ValueInfo {
   }
 
   // Date (check before generic object)
+  // Dates can now have properties, so they need to be navigable
   if (value instanceof Date) {
     return {
       category: ValueCategory.DATE,
       typeName: 'Date',
-      isNavigable: false,
+      isNavigable: true,  // Changed: Dates can have properties now
       isCollection: false,
       displayIcon: DISPLAY_ICONS.DATE,
       cssClass: CSS_CLASSES.VALUE_DATE,
@@ -296,13 +297,24 @@ export function isPrimitive(value: unknown): boolean {
 export function isLeafLikeObject(value: unknown): boolean {
   if (value === null || value === undefined) return false;
   if (typeof value !== 'object') return false;
-  if (value instanceof Date) return false; // Dates are primitives for our purposes
   if (isCollection(value)) return false;
 
   // Check if all properties are scalars or Dates
   // Small objects (≤ 5 visible properties) are good candidates for inline expansion
+  // This now includes Date objects with properties!
   const entries = Object.entries(value).filter(([k]) => !k.startsWith('__'));
-  if (entries.length > 5) return false;
+
+  // Date objects can be leaf-like if they have scalar properties
+  // (The Date timestamp is internal and doesn't count as a property)
+  if (value instanceof Date) {
+    // Empty Date (no properties) is not leaf-like (just show the timestamp)
+    if (entries.length === 0) return false;
+    // Date with too many properties is not leaf-like
+    if (entries.length > 5) return false;
+  } else {
+    // Regular objects
+    if (entries.length > 5) return false;
+  }
 
   return entries.every(([_, v]) => {
     if (v === null || v === undefined) return true;
