@@ -2,7 +2,7 @@
 
 **Conceptual domain modeling + event-sourced transparent persistence + rich synthesized GUIs —all in-browser, no server, zero dependencies.** Define your domain at the conceptual level (e.g. E/R), and Filer synthesizes JavaScript prototypes, persistence, validation, and interactive UIs on the fly. Your data and its schema coexist as equals in the same memory image, enabling unprecedented flexibility: change the schema, existing data adapts automatically. No migrations, no ORMs, no impedance mismatch—just JavaScript objects that persist themselves and GUIs that materialize from metadata.
 
-![Navigator Example](docs/img/navigator-example.png)
+![Navigator Example](docs/img/readme/navigator-example.png)
 
 *Interactive domain exploration: navigate your object graphs, execute JavaScript, visualize relationships—all without a server or database.*
 
@@ -120,6 +120,9 @@ const root2 = await replayEventsFromLog({ eventLog });
 // root2 === root (same state, reconstructed from events)
 ```
 
+*A conceptual depiction of MemImg's event sourcing: mutations are captured as events in a log, which can be replayed to reconstruct the application's state at any point in time.*
+![MemImg Event Sourcing](docs/img/readme/memimg-event-sourcing.png)
+
 **Capabilities:**
 
 - **Transparent Persistence**: Just assign properties—`emp.sal = 5000`—and changes are logged
@@ -196,6 +199,9 @@ const Emp = ObjectType({
 4. **Data validation** based on constraints (required, min/max, unique, regex, custom)
 5. **Referential integrity** maintained automatically—`dept` references are type-checked
 
+*From conceptual model to interactive UI: Filer synthesizes the user interface directly from the metadata, eliminating manual UI development.*
+![Metadata Synthesis](docs/img/readme/metadata-synthesis.png)
+
 **Synthesis, Not Code Generation:**
 
 - **No build step**: Changes take effect immediately
@@ -222,6 +228,9 @@ The types that define `Dept` and `Emp` (`ObjectType`, `NumberType`, `StringType`
 ## Metadata IS Data: No Migration Hell
 
 Traditional systems separate schema (DDL) from data (rows). This creates friction:
+
+*The old way vs. the Filer way: Filer eliminates the painful, error-prone process of data migrations by unifying schema and data into a single, cohesive memory image.*
+![No Migration Hell](docs/img/readme/unified-metadata-data.png)
 
 - **Schema changes require migrations**: Add a column? Write migration SQL, version it, test it, deploy it.
 - **Schema and data are versioned separately**: Schema at v12, data from v8? Good luck.
@@ -276,6 +285,10 @@ This is **not** hot-reloading or live-reloading tricks. The metadata **IS** a Ja
 ### LLM-Aided Controlled Natural Language
 
 - **Describe your domain in plain English**: No code, no diagrams, just conversation
+
+*From conversation to application: An AI assistant translates natural language into a formal domain model, which Filer uses to synthesize a working application on the fly.*
+![LLM-Aided Modeling](docs/img/readme/llm-aided-modelling.png)
+
 - **LLM translates to formal metadata specifications**: Natural language → `ObjectType` definitions
 - **Interactive refinement**: Ask follow-up questions, adjust properties, preview results
 - **Hands-free domain modeling**: From idea to working system in minutes
