@@ -4,9 +4,16 @@
  * This module provides UI-focused type classification, separate from
  * memimg's type-classifier which is for serialization. Navigator needs
  * additional display metadata (icons, CSS classes, navigability).
+ *
+ * NOTE: Basic type guards (isPrimitive, isCollection) are now imported
+ * from foundation layer to eliminate duplication with memimg.
  */
 
 import { CSS_CLASSES, DISPLAY_ICONS } from './constants.js';
+import {
+  isPrimitive as isPrimitiveBase,
+  isCollection as isCollectionBase,
+} from '../foundation/js-types.js';
 
 // ============================================================================
 // Transaction Proxy Unwrapping
@@ -291,20 +298,17 @@ export function isNavigable(value: unknown): boolean {
 
 /**
  * Check if value is a collection (Array/Map/Set)
+ *
+ * Re-exported from foundation/js-types.ts for backward compatibility.
  */
-export function isCollection(value: unknown): boolean {
-  return Array.isArray(value) || value instanceof Map || value instanceof Set;
-}
+export const isCollection = isCollectionBase;
 
 /**
  * Check if value is a primitive (not navigable)
+ *
+ * Re-exported from foundation/js-types.ts for backward compatibility.
  */
-export function isPrimitive(value: unknown): boolean {
-  if (value === null || value === undefined) return true;
-  const type = typeof value;
-  return type === 'string' || type === 'number' || type === 'boolean' ||
-         type === 'bigint' || type === 'symbol';
-}
+export const isPrimitive = isPrimitiveBase;
 
 /**
  * Check if value is a Date (works with both direct Dates and proxied Dates)
