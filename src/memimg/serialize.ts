@@ -169,11 +169,44 @@ function serializeValue(
         description: (value as symbol).description,
       };
 
-    case ValueCategory.DATE:
-      return {
+    case ValueCategory.DATE: {
+      // Unwrap proxy to get underlying target
+      const target = proxyToTarget.get(value as object) || value;
+
+      // Check for circular reference
+      const ref = cycleTracker.getReference(target as object);
+      if (ref) return ref;
+
+      // Mark as seen for cycle detection
+      cycleTracker.markSeen(target as object, path);
+
+      const dateObj = target as Date;
+
+      // Get timestamp value (handles invalid dates)
+      const timestamp = dateObj.getTime();
+      const dateValue = isNaN(timestamp) ? null : dateObj.toISOString();
+
+      // Start with Date-specific fields
+      const serialized: Record<string, unknown> = {
         [TYPE_MARKERS.TYPE]: "date",
-        value: (value as Date).toISOString(),
+        [TYPE_MARKERS.DATE_VALUE]: dateValue,  // Internal timestamp (null if invalid)
       };
+
+      // Serialize all user-defined enumerable properties
+      // (This preserves properties like date.location, date.attendees, etc.)
+      const entries = Object.entries(dateObj);
+      for (const [key, val] of entries) {
+        // Recursively serialize property values (handles nested objects, arrays, etc.)
+        serialized[key] = serializeValue(
+          val,
+          [...path, key],
+          cycleTracker,
+          proxyToTarget
+        );
+      }
+
+      return serialized;
+    }
 
     case ValueCategory.FUNCTION: {
       const fn = value as { __type__?: string; sourceCode?: string };

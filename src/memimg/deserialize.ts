@@ -51,10 +51,37 @@ const deserializeFunction = (obj: {
 };
 
 /**
- * Reconstruct a Date from ISO string
+ * Reconstruct a Date with all its properties
  */
-const deserializeDate = (obj: { value: string }): Date => {
-  return new Date(obj.value);
+const deserializeDate = (
+  obj: Record<string, unknown>,
+  reconstructValue: (val: unknown, refs: Record<string, unknown>) => unknown,
+  refs: Record<string, unknown>
+): Date => {
+  // Expect new format: { __type__: 'date', __dateValue__: '...', ...properties }
+  if (!('__dateValue__' in obj)) {
+    // Handle old format for backward compatibility (if needed)
+    // For now, throw clear error since no legacy data exists
+    throw new Error('Invalid Date serialization format: missing __dateValue__ field');
+  }
+
+  // Create Date from timestamp (handle null for invalid dates)
+  const dateValue = obj.__dateValue__;
+  const date = dateValue === null ? new Date('invalid') : new Date(dateValue as string);
+
+  // Restore all user-defined properties (skip metadata fields)
+  for (const [key, value] of Object.entries(obj)) {
+    // Skip internal metadata fields
+    if (key === '__type__' || key === '__dateValue__') {
+      continue;
+    }
+
+    // Recursively reconstruct property values
+    // This handles nested objects, arrays, collections, etc.
+    (date as any)[key] = reconstructValue(value, refs);
+  }
+
+  return date;
 };
 
 /**
@@ -130,7 +157,17 @@ const deserializeSet = (obj: { values: unknown[] }, parsed: any): Set<unknown> =
  */
 const deserializers: Record<string, (obj: any, parsed: any) => any> = {
   function: (obj) => deserializeFunction(obj),
-  date: (obj) => deserializeDate(obj),
+  date: (obj, parsed) => {
+    // Create simple reconstruction function for use in deserializeMemoryImage context
+    const simpleReconstruct = (val: unknown, _refs: Record<string, unknown>) => {
+      if (val && typeof val === 'object' && '__type__' in val) {
+        const handler = deserializers[(val as any).__type__];
+        return handler ? handler(val, parsed) : val;
+      }
+      return val;
+    };
+    return deserializeDate(obj, simpleReconstruct, parsed);
+  },
   bigint: (obj) => deserializeBigInt(obj),
   symbol: (obj) => deserializeSymbol(obj),
   ref: (obj) => ({ __unresolved_ref__: obj.path }) as UnresolvedRefMarker,
@@ -273,8 +310,17 @@ export const reconstructValue = (
           typedValue as unknown as { sourceCode: string },
         );
 
-      case "date":
-        return deserializeDate(typedValue as unknown as { value: string });
+      case "date": {
+        // Create wrapper that matches expected signature
+        const refs = root as Record<string, unknown>;
+        const reconstruct = (val: unknown, _refs: Record<string, unknown>) =>
+          reconstructValue(val as SerializedValue, root, seen);
+        return deserializeDate(
+          typedValue as unknown as Record<string, unknown>,
+          reconstruct,
+          refs
+        );
+      }
 
       case "bigint":
         return deserializeBigInt(typedValue as unknown as { value: string });

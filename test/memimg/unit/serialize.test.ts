@@ -108,7 +108,22 @@ describe('serialize', () => {
       const parsed = JSON.parse(json);
 
       assert.equal(parsed.__type__, 'date');
-      assert.equal(parsed.value, '2024-01-01T00:00:00.000Z');
+      assert.equal(parsed.__dateValue__, '2024-01-01T00:00:00.000Z');
+    });
+
+    it('serializes Date with properties', () => {
+      const proxyToTarget = new WeakMap();
+      const date = new Date('2024-01-01T00:00:00.000Z');
+      (date as any).location = "Room A";
+      (date as any).capacity = 10;
+
+      const json = serializeMemoryImage(date, proxyToTarget);
+      const parsed = JSON.parse(json);
+
+      assert.equal(parsed.__type__, 'date');
+      assert.equal(parsed.__dateValue__, '2024-01-01T00:00:00.000Z');
+      assert.equal(parsed.location, "Room A");
+      assert.equal(parsed.capacity, 10);
     });
 
     it('serializes function with __type__', () => {
@@ -530,7 +545,7 @@ describe('serialize', () => {
       const value = serializeValueForEvent(date, proxyToTarget, targetToPath, ['path']);
 
       assert.ok((value as any).__type__ === 'date');
-      assert.ok((value as any).value);
+      assert.ok((value as any).__dateValue__);
     });
 
     it('serializes BigInt', () => {

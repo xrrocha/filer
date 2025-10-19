@@ -55,6 +55,9 @@ export const TYPE_MARKERS = {
 
   /** Marker for reference objects */
   UNRESOLVED_REF: '__unresolved_ref__',
+
+  /** Internal timestamp field for Date objects (preserves Date value while allowing properties) */
+  DATE_VALUE: '__dateValue__',
 } as const;
 
 // ============================================================================

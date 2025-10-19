@@ -130,12 +130,27 @@ describe.skip('deserialize', () => {
     it('deserializes Date', () => {
       const json = JSON.stringify({
         __type__: 'date',
-        value: '2024-01-01T00:00:00.000Z',
+        __dateValue__: '2024-01-01T00:00:00.000Z',
       });
       const result = deserializeMemoryImage(json);
 
       assert.ok(result instanceof Date);
       assert.equal((result as Date).toISOString(), '2024-01-01T00:00:00.000Z');
+    });
+
+    it('deserializes Date with properties', () => {
+      const json = JSON.stringify({
+        __type__: 'date',
+        __dateValue__: '2024-01-01T00:00:00.000Z',
+        location: "Room A",
+        capacity: 10
+      });
+      const result = deserializeMemoryImage(json) as any;
+
+      assert.ok(result instanceof Date);
+      assert.equal(result.toISOString(), '2024-01-01T00:00:00.000Z');
+      assert.equal(result.location, "Room A");
+      assert.equal(result.capacity, 10);
     });
 
     it('deserializes function', () => {
