@@ -160,9 +160,13 @@ const deserializers: Record<string, (obj: any, parsed: any) => any> = {
   date: (obj, parsed) => {
     // Create simple reconstruction function for use in deserializeMemoryImage context
     const simpleReconstruct = (val: unknown, _refs: Record<string, unknown>) => {
+      // Handle references
       if (val && typeof val === 'object' && '__type__' in val) {
         const handler = deserializers[(val as any).__type__];
-        return handler ? handler(val, parsed) : val;
+        const result = handler ? handler(val, parsed) : val;
+        // If the result is an unresolved ref marker, return it as-is
+        // (it will be tracked by the traverse function)
+        return result;
       }
       return val;
     };
@@ -218,6 +222,23 @@ export const deserializeMemoryImage = (json: string | unknown): unknown => {
         return result;
       }
 
+      // For Date objects, check if any properties are unresolved refs
+      // (This handles circular references in Date properties)
+      if (result instanceof Date) {
+        for (const key in result) {
+          if (Object.prototype.hasOwnProperty.call(result, key)) {
+            const value = (result as any)[key];
+            if (value && isUnresolvedRefMarker(value)) {
+              unresolvedRefs.push({
+                parent: result,
+                key,
+                path: value.__unresolved_ref__,
+              });
+            }
+          }
+        }
+      }
+
       return result;
     }
 
@@ -242,6 +263,23 @@ export const deserializeMemoryImage = (json: string | unknown): unknown => {
               });
             } else {
               obj[key] = result;
+
+              // For Date objects, check if any properties are unresolved refs
+              // (This handles circular references in Date properties)
+              if (result instanceof Date) {
+                for (const dateKey in result) {
+                  if (Object.prototype.hasOwnProperty.call(result, dateKey)) {
+                    const dateValue = (result as any)[dateKey];
+                    if (dateValue && isUnresolvedRefMarker(dateValue)) {
+                      unresolvedRefs.push({
+                        parent: result,
+                        key: dateKey,
+                        path: dateValue.__unresolved_ref__,
+                      });
+                    }
+                  }
+                }
+              }
             }
           } else {
             // Regular object, recurse

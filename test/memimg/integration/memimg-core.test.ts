@@ -221,7 +221,7 @@ describe('memimg-core integration', () => {
     it('deserializes Dates', () => {
       const date = new Date('2024-01-01');
       const json = JSON.stringify({
-        date: { __type__: 'date', value: date.toISOString() }
+        date: { __type__: 'date', __dateValue__: date.toISOString() }
       });
       const result: any = deserializeMemoryImageFromJson(json);
 
