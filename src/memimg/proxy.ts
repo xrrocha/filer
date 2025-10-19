@@ -261,11 +261,6 @@ export const wrapIfNeeded = (
     return value;
   }
 
-  // Date objects are treated as primitives
-  if (value instanceof Date) {
-    return value;
-  }
-
   // CRITICAL: Check if value is already a proxy
   if (infrastructure.proxyToTarget.has(value as object)) {
     return value; // Already a proxy, return as-is
@@ -377,6 +372,46 @@ const createProxyHandler = (
   get(target: object, property: string | symbol): unknown {
     const value = (target as Record<string | symbol, unknown>)[property];
 
+    // Special handling for Date objects
+    // Date methods need to be bound to the target, not the proxy
+    if (target instanceof Date) {
+      // List of Date methods that operate on the internal timestamp
+      const dateMethods = [
+        // Getters
+        'getTime', 'getFullYear', 'getMonth', 'getDate',
+        'getDay', 'getHours', 'getMinutes', 'getSeconds', 'getMilliseconds',
+        'getUTCFullYear', 'getUTCMonth', 'getUTCDate', 'getUTCDay',
+        'getUTCHours', 'getUTCMinutes', 'getUTCSeconds', 'getUTCMilliseconds',
+        'getTimezoneOffset',
+        // Setters (these WILL be tracked as they mutate the timestamp)
+        'setTime', 'setFullYear', 'setMonth', 'setDate',
+        'setHours', 'setMinutes', 'setSeconds', 'setMilliseconds',
+        'setUTCFullYear', 'setUTCMonth', 'setUTCDate',
+        'setUTCHours', 'setUTCMinutes', 'setUTCSeconds', 'setUTCMilliseconds',
+        // Conversion methods
+        'toISOString', 'toDateString', 'toTimeString', 'toLocaleDateString',
+        'toLocaleString', 'toLocaleTimeString', 'toUTCString',
+        'toString', 'toJSON',
+        // Other
+        'valueOf'
+      ];
+
+      if (dateMethods.includes(property as string)) {
+        const val = value;
+        if (typeof val === 'function') {
+          // Bind method to target, not proxy
+          // This ensures Date methods operate on the internal [[DateValue]] slot
+          return val.bind(target);
+        }
+        return val;
+      }
+
+      // Symbol.toPrimitive - used for type coercion
+      if (property === Symbol.toPrimitive) {
+        return (target as Date)[Symbol.toPrimitive].bind(target);
+      }
+    }
+
     // Arrays: Wrap mutating methods
     if (Array.isArray(target) && typeof value === "function") {
       const methodName = String(property);
@@ -433,7 +468,7 @@ const createProxyHandler = (
     // CRITICAL: Wrap non-primitive values before returning them
     // This ensures objects accessed from arrays/objects get proxied on-the-fly
     // Example: root.users[0] returns a wrapped object, so root.users[0].age = 31 is tracked
-    if (value !== null && typeof value === "object" && !(value instanceof Date)) {
+    if (value !== null && typeof value === "object") {
       const parentPath = infrastructure.targetToPath.get(target) || [];
       const valuePath = [...parentPath, String(property)];
 

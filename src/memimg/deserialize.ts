@@ -254,15 +254,16 @@ export const deserializeMemoryImage = (json: string | unknown): unknown => {
     return obj;
   }
 
-  // First pass
-  traverse(parsed);
+  // First pass - IMPORTANT: capture the result!
+  // If the top-level object is a special type (e.g., Date), traverse returns the deserialized result
+  const result = traverse(parsed);
 
   // Second pass: resolve all refs
   for (const ref of unresolvedRefs) {
     const { parent, key, path } = ref;
 
     // Navigate to the referenced object
-    let target: any = parsed;
+    let target: any = result;
     for (const segment of path) {
       target = target[segment];
       if (target === undefined) {
@@ -276,7 +277,7 @@ export const deserializeMemoryImage = (json: string | unknown): unknown => {
     }
   }
 
-  return parsed;
+  return result;
 };
 
 /**

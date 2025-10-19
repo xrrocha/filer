@@ -95,13 +95,84 @@ describe('proxy', () => {
     });
   });
 
-  describe('wrapIfNeeded - Date', () => {
-    it('returns Date unchanged (treated as primitive)', () => {
+  describe('Date proxying', () => {
+    it('should proxy Date objects', () => {
       const infrastructure = createProxyInfrastructure();
       const date = new Date('2024-01-01');
-      const result = wrapIfNeeded(date, [], infrastructure);
+      const proxied = wrapIfNeeded(date, [], infrastructure);
 
-      assert.equal(result, date);
+      // Should be proxied (not the same reference)
+      assert.notEqual(proxied, date);
+
+      // Infrastructure should track it
+      assert.ok(infrastructure.proxyToTarget.has(proxied as object));
+      assert.equal(infrastructure.proxyToTarget.get(proxied as object), date);
+    });
+
+    it('should preserve Date methods through proxy', () => {
+      const infrastructure = createProxyInfrastructure();
+      const date = new Date('2024-01-15T10:30:45.123Z');
+      const proxied = wrapIfNeeded(date, [], infrastructure) as Date;
+
+      // All Date methods should work (use UTC methods for consistent results)
+      assert.equal(proxied.getUTCFullYear(), 2024);
+      assert.equal(proxied.getUTCMonth(), 0);  // January
+      assert.equal(proxied.getUTCDate(), 15);
+      assert.equal(proxied.getUTCHours(), 10);
+      assert.equal(proxied.toISOString(), '2024-01-15T10:30:45.123Z');
+      assert.equal(typeof proxied.getTime(), 'number');
+    });
+
+    it('should allow Date property mutations through proxy', () => {
+      const infrastructure = createProxyInfrastructure();
+      const date = new Date('2024-01-01');
+      (date as any).location = "Room A";
+      (date as any).capacity = 10;
+
+      const proxied = wrapIfNeeded(date, ['meeting'], infrastructure) as any;
+
+      // Should be able to read existing properties
+      assert.equal(proxied.location, "Room A");
+      assert.equal(proxied.capacity, 10);
+
+      // Should be able to set properties
+      proxied.location = "Room B";
+      proxied.capacity = 20;
+
+      // Changes should be visible
+      assert.equal(proxied.location, "Room B");
+      assert.equal(proxied.capacity, 20);
+    });
+
+    it('should handle Date type coercion through proxy', () => {
+      const infrastructure = createProxyInfrastructure();
+      const date = new Date('2024-01-15');
+      const proxied = wrapIfNeeded(date, [], infrastructure) as Date;
+
+      // Should coerce to number (timestamp)
+      const timestamp = +proxied;
+      assert.equal(typeof timestamp, 'number');
+      assert.equal(timestamp, date.getTime());
+
+      // Should coerce to string
+      const str = String(proxied);
+      assert.equal(typeof str, 'string');
+    });
+
+    it('should handle Date with nested object properties', () => {
+      const infrastructure = createProxyInfrastructure();
+      const date = new Date('2024-01-01');
+      (date as any).metadata = {
+        organizer: "Alice",
+        room: { number: 101 }
+      };
+
+      const proxied = wrapIfNeeded(date, [], infrastructure) as any;
+
+      // Nested properties should also be proxied
+      assert.ok(infrastructure.proxyToTarget.has(proxied.metadata));
+      assert.equal(proxied.metadata.organizer, "Alice");
+      assert.equal(proxied.metadata.room.number, 101);
     });
   });
 
