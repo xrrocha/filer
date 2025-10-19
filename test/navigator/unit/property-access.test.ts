@@ -397,4 +397,56 @@ describe('Property Access', () => {
       assert.ok(props.some(([k]) => k === 'length'));
     });
   });
+
+  // ==========================================================================
+  // ObjectType Proxy Fallback (Inspector Sync Bug Fix)
+  // ==========================================================================
+
+  describe('getOwnProperties - ObjectType proxy fallback', () => {
+    it('should use Reflect.ownKeys as fast path for normal objects', () => {
+      const obj = { x: 10, y: 20 };
+      const result = getOwnProperties(obj);
+      assert.equal(result.length, 2);
+      assert.ok(result.some(([k, v]) => k === 'x' && v === 10));
+      assert.ok(result.some(([k, v]) => k === 'y' && v === 20));
+    });
+
+    it('should handle empty objects correctly', () => {
+      const obj = {};
+      const result = getOwnProperties(obj);
+      assert.equal(result.length, 0);
+    });
+
+    it('should handle Arrays with all properties including length', () => {
+      const arr = [1, 2, 3];
+      const result = getOwnProperties(arr);
+      // Should include numeric indices and 'length'
+      assert.ok(result.length >= 4); // '0', '1', '2', 'length'
+      assert.ok(result.some(([k]) => k === 'length'));
+      assert.ok(result.some(([k]) => k === '0'));
+    });
+
+    it('should work with standard proxies', () => {
+      const target = { name: 'test', value: 42 };
+      const proxy = new Proxy(target, {});
+
+      const result = getOwnProperties(proxy);
+      assert.equal(result.length, 2);
+      assert.ok(result.some(([k, v]) => k === 'name' && v === 'test'));
+      assert.ok(result.some(([k, v]) => k === 'value' && v === 42));
+    });
+
+    it('should fall back gracefully when Reflect.ownKeys has no string keys', () => {
+      // Edge case: object with only symbol keys
+      const sym = Symbol('test');
+      const obj = { [sym]: 'symbolValue', regularProp: 'regularValue' };
+
+      const result = getOwnProperties(obj);
+      // Should return at least the regular property
+      assert.ok(result.length >= 1);
+      assert.ok(result.some(([k, v]) => k === 'regularProp' && v === 'regularValue'));
+      // Symbols should be filtered out
+      assert.ok(!result.some(([k]) => typeof k === 'symbol'));
+    });
+  });
 });

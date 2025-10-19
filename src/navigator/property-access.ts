@@ -45,18 +45,31 @@ export function getOwnProperties(obj: any): Array<[string, any]> {
     return [];
   }
 
-  // Use Reflect.ownKeys() to get ALL properties (enumerable and non-enumerable)
-  // This is needed for Arrays (to include 'length') and proxies
+  // Strategy: Try Reflect.ownKeys() first (handles Arrays, most proxies)
+  // If empty, fall back to Object.entries() (handles ObjectType proxies)
+  // This dual-fallback ensures we catch properties regardless of proxy implementation
   try {
     const keys = Reflect.ownKeys(obj);
-
-    // Filter to string keys only (exclude symbols)
     const stringKeys = keys.filter((k): k is string => typeof k === 'string');
 
-    // Map keys to [key, value] tuples
-    return stringKeys.map(k => [k, obj[k]]);
+    // If Reflect.ownKeys() found properties, use them
+    // This is the fast path for 99% of objects and handles non-enumerable properties
+    if (stringKeys.length > 0) {
+      return stringKeys.map(k => [k, obj[k]]);
+    }
+
+    // CRITICAL FIX: If Reflect.ownKeys() returned [], fall back to Object.entries()
+    // This handles transaction-wrapped ObjectType proxies where ownKeys trap returns []
+    // but getOwnPropertyDescriptor trap works correctly
+    const entries = Object.entries(obj);
+    if (entries.length > 0) {
+      return entries;
+    }
+
+    // Both methods returned empty - object genuinely has no properties
+    return [];
   } catch (err) {
-    // If Reflect.ownKeys() fails, fall back to Object.entries()
+    // If Reflect.ownKeys() throws, fall back to Object.entries()
     console.error('Failed to enumerate object properties with Reflect.ownKeys:', err);
     return Object.entries(obj);
   }
