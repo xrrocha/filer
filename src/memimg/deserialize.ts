@@ -313,7 +313,7 @@ function deserializeTwoPass(
 
   // First pass - IMPORTANT: capture the result!
   // If the top-level object is a special type (e.g., Date), traverse returns the deserialized result
-  const result = traverse(parsed);
+  let result = traverse(parsed);
 
   // Second pass: resolve all refs using the pluggable resolver
   for (const ref of unresolvedRefs) {
@@ -325,7 +325,14 @@ function deserializeTwoPass(
 
     // Replace the placeholder with the actual reference
     if (parent && key !== null) {
+      // Normal case: ref is a property of some object
       parent[key] = target;
+    } else if (parent === null && key === null) {
+      // Special case: the entire value IS a reference
+      // This happens when deserializing event values like:
+      //   SET root.node.self = {__type__: "ref", path: ["node"]}
+      // In this case, we need to RETURN the resolved target
+      result = target;
     }
   }
 
@@ -437,7 +444,9 @@ export function deserializeEventValue(
   value: unknown,
   memoryRoot: unknown
 ): unknown {
-  const parsed = typeof value === "string" ? JSON.parse(value) : value;
+  // Event values are already parsed (not JSON strings)
+  // They come directly from event.value which is already JavaScript
+  const parsed = value;
 
   /**
    * Hierarchical scoped resolver - implements closure semantics.

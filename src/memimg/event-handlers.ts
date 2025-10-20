@@ -23,7 +23,7 @@ import type {
 } from './types.js';
 import { EVENT_TYPES } from './constants.js';
 import { serializeValueForEvent } from './serialize.js';
-import { reconstructValue, deserializeMemoryImage } from './deserialize.js';
+import { reconstructValue, deserializeEventValue } from './deserialize.js';
 
 // ============================================================================
 // Event Handler Interface
@@ -98,22 +98,30 @@ class SetEventHandler implements EventHandler {
 
   applyEvent(event: Event, target: unknown, key: string, root: unknown): void {
     const setEvent = event as Event & { value: SerializedValue };
-    // CRITICAL: If the value contains internal references (relative paths),
-    // we need two-pass deserialization. Use deserializeMemoryImage which handles this.
-    // Internal references are relative to the value being set, not the root.
-    const valueStr = JSON.stringify(setEvent.value);
-    const hasRefs = valueStr.includes('"__type__":"ref"');
 
-    if (hasRefs) {
-      // Use two-pass deserialization for values with internal references
-      (target as Record<string, unknown>)[key] = deserializeMemoryImage(setEvent.value);
-    } else {
-      // Simple reconstruction for values without references
-      (target as Record<string, unknown>)[key] = reconstructValue(
-        setEvent.value,
-        root,
-      );
-    }
+    /**
+     * Use hierarchical scoped resolution for event values.
+     *
+     * WHY: Event values exhibit closure semantics - they have internal structure
+     * (objects within the value) and capture external context (references to
+     * objects in the memory graph).
+     *
+     * WHAT: deserializeEventValue implements proper hierarchical scoped resolution:
+     * 1. Try value scope first (internal refs - relative paths)
+     * 2. Fall back to memory scope (external refs - absolute paths)
+     *
+     * HOW: This works correctly whether the value has:
+     * - No references (simple values)
+     * - Only internal references (cycles within value)
+     * - Only external references (refs to memory)
+     * - Mixed internal + external references (the critical case!)
+     *
+     * No special-case detection needed - hierarchical resolution handles all cases.
+     */
+    (target as Record<string, unknown>)[key] = deserializeEventValue(
+      setEvent.value,
+      root  // Memory root for external ref resolution
+    );
   }
 }
 
