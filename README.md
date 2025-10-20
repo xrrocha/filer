@@ -1,4 +1,4 @@
-# Filer: Domain-Driven Development Without the Infrastructure
+# Filer: From Data Model to Working App—Instantly
 
 **Conceptual domain modeling + event-sourced transparent persistence + rich synthesized GUIs —all in-browser, no server, zero dependencies.** Define your domain at the conceptual level (e.g. E/R), and Filer synthesizes JavaScript prototypes, persistence, validation, and interactive UIs on the fly. Your data and its schema coexist as equals in the same memory image, enabling unprecedented flexibility: change the schema, existing data adapts automatically. No migrations, no ORMs, no impedance mismatch—just JavaScript objects that persist themselves and GUIs that materialize from metadata.
 
