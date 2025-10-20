@@ -23,7 +23,7 @@ import type {
 } from './types.js';
 import { EVENT_TYPES } from './constants.js';
 import { serializeValueForEvent } from './serialize.js';
-import { reconstructValue } from './deserialize.js';
+import { reconstructValue, deserializeMemoryImage } from './deserialize.js';
 
 // ============================================================================
 // Event Handler Interface
@@ -98,10 +98,22 @@ class SetEventHandler implements EventHandler {
 
   applyEvent(event: Event, target: unknown, key: string, root: unknown): void {
     const setEvent = event as Event & { value: SerializedValue };
-    (target as Record<string, unknown>)[key] = reconstructValue(
-      setEvent.value,
-      root,
-    );
+    // CRITICAL: If the value contains internal references (relative paths),
+    // we need two-pass deserialization. Use deserializeMemoryImage which handles this.
+    // Internal references are relative to the value being set, not the root.
+    const valueStr = JSON.stringify(setEvent.value);
+    const hasRefs = valueStr.includes('"__type__":"ref"');
+
+    if (hasRefs) {
+      // Use two-pass deserialization for values with internal references
+      (target as Record<string, unknown>)[key] = deserializeMemoryImage(setEvent.value);
+    } else {
+      // Simple reconstruction for values without references
+      (target as Record<string, unknown>)[key] = reconstructValue(
+        setEvent.value,
+        root,
+      );
+    }
   }
 }
 

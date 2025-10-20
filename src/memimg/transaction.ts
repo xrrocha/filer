@@ -109,6 +109,7 @@ import { DeltaManager } from "./delta-manager.js";
 import { deepUnwrap } from "./proxy-unwrapper.js";
 import { createTransactionProxy } from "./transaction-proxy.js";
 import { replayFromEventLog } from "./replay.js";
+import { serializeValueForEvent } from "./serialize.js";
 
 /**
  * Transaction manages a memory image with uncommitted changes
@@ -241,6 +242,29 @@ export async function createTransaction(
       // Shared seen map for unwrapping - preserves identity across all delta entries
       const seen = new WeakMap<object, any>();
 
+      // CRITICAL: Build targetToPath map from baseRaw for reference tracking
+      // This allows serialization to create proper references to existing objects
+      const targetToPath = new WeakMap<object, string[]>();
+      const buildPathMap = (obj: any, path: string[] = []) => {
+        if (obj === null || typeof obj !== 'object') return;
+        if (targetToPath.has(obj)) return; // Already visited
+
+        targetToPath.set(obj, path);
+
+        if (Array.isArray(obj)) {
+          obj.forEach((item, idx) => buildPathMap(item, [...path, String(idx)]));
+        } else if (obj instanceof Map) {
+          let idx = 0;
+          obj.forEach((val) => buildPathMap(val, [...path, `map:${idx++}`]));
+        } else if (obj instanceof Set) {
+          let idx = 0;
+          obj.forEach((val) => buildPathMap(val, [...path, `set:${idx++}`]));
+        } else if (!(obj instanceof Date)) {
+          Object.entries(obj).forEach(([key, val]) => buildPathMap(val, [...path, key]));
+        }
+      };
+      buildPathMap(baseRaw);
+
       // Apply delta to baseRaw and log events
       for (const [pathStr, value] of sortedDelta) {
         const pathParts = pathStr.split('.');
@@ -267,13 +291,24 @@ export async function createTransaction(
           // Unwrap any proxies recursively before saving to baseRaw
           // Use shared seen map to preserve identity across circular refs
           const unwrappedValue = deepUnwrap(value, targetCache, seen);
+
+          // CRITICAL FIX: Serialize the value BEFORE applying to baseRaw
+          // This prevents objects in the new value from being treated as "already in graph"
+          const serializedValue = serializeValueForEvent(
+            unwrappedValue,
+            new WeakMap(), // proxyToTarget (empty since value is already unwrapped)
+            targetToPath,   // targetToPath from baseRaw for reference detection
+            pathParts
+          );
+
+          // Now apply to baseRaw (after serialization)
           target[finalProp] = unwrappedValue;
 
-          // Log SET event with unwrapped value
+          // Log SET event with properly serialized value
           await persistentLog.append({
             type: 'SET',
             path: pathParts,
-            value: unwrappedValue,
+            value: serializedValue,
             timestamp: Date.now(),
           });
         }

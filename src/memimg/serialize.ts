@@ -77,10 +77,10 @@ class SnapshotCycleTracker implements CycleTracker {
  * Smart reference detection:
  * 1. Checks if object already exists in the graph (via targetToPath)
  * 2. Only creates ref if existing path is OUTSIDE the current value tree
- * 3. Uses WeakSet to detect internal cycles within the value itself
+ * 3. Uses Map to track internal paths for objects seen within this value
  */
 class EventCycleTracker implements CycleTracker {
-  private seen = new WeakSet<object>();
+  private seen = new Map<object, Path>();
 
   constructor(
     private targetToPath: WeakMap<object, Path>,
@@ -91,8 +91,8 @@ class EventCycleTracker implements CycleTracker {
     return this.seen.has(target);
   }
 
-  markSeen(target: object, _path: Path): void {
-    this.seen.add(target);
+  markSeen(target: object, path: Path): void {
+    this.seen.set(target, path);
   }
 
   getReference(target: object): SerializedValue | null {
@@ -114,9 +114,20 @@ class EventCycleTracker implements CycleTracker {
       }
     }
 
-    // Check for internal cycles (circular reference within this value)
+    // Check for internal references (same object appearing multiple times within this value)
     if (this.hasSeen(target)) {
-      return { __type__: "circular" };
+      const internalPath = this.seen.get(target)!;
+
+      // CRITICAL: Internal references need to be RELATIVE to the event's value root
+      // The internalPath is absolute (e.g., ['depts', 'accounting', 'emps', '0', 'dept'])
+      // But currentPath is the event path (e.g., ['depts'])
+      // We need to strip the currentPath prefix to make it relative: ['accounting', 'emps', '0', 'dept']
+      const relativePath = internalPath.slice(this.currentPath.length);
+
+      return {
+        __type__: "ref",
+        path: relativePath,
+      };
     }
 
     return null;
