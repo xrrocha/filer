@@ -14,6 +14,11 @@ What if you could define your domain—a recipe collection, a reading list, a fa
 
 ### Try It Now (Zero Setup)
 
+You can try it [online](https://rrocha.me/projects/filer) (runs locally on your
+machine; absolutely none of your date sent anywhere).
+
+Or, to run it on your own machine:
+
 1. Download [`dist/index.html`](dist/index.html) — one self-contained 140KB file
 2. Open it in your browser (works with `file://` protocol—no server needed)
 3. Click **"Load Example"** to explore a working Employee/Department schema
