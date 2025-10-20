@@ -502,76 +502,8 @@ function downloadFile(filename: string, content: string): void {
 /**
  * Serialize an event, converting values with cycles to JSON-safe format
  */
-function serializeEvent(event: any): any {
-  // Helper to serialize a value recursively
-  const serializeValue = (value: any, seen = new WeakSet()): any => {
-    // Primitives
-    if (value === null || value === undefined) return value;
-    if (typeof value !== 'object') return value;
-
-    // Check for cycles
-    if (seen.has(value)) {
-      return { __type__: "cyclic_ref" };
-    }
-    seen.add(value);
-
-    // Handle Date (unwrap transaction proxies first)
-    // Need to check unwrapped value since transaction proxies hide instanceof
-    const unwrapped = txn?.unwrap(value) || value;
-    if (unwrapped instanceof Date) {
-      return { __type__: "date", value: unwrapped.toISOString() };
-    }
-
-    // Handle Array
-    if (Array.isArray(value)) {
-      return value.map(item => serializeValue(item, seen));
-    }
-
-    // Handle Map
-    if (value instanceof Map) {
-      return {
-        __type__: "map",
-        entries: Array.from(value.entries()).map(([k, v]) => [
-          serializeValue(k, seen),
-          serializeValue(v, seen)
-        ])
-      };
-    }
-
-    // Handle Set
-    if (value instanceof Set) {
-      return {
-        __type__: "set",
-        values: Array.from(value).map(v => serializeValue(v, seen))
-      };
-    }
-
-    // Handle plain objects
-    const result: any = {};
-    for (const key in value) {
-      if (value.hasOwnProperty(key)) {
-        result[key] = serializeValue(value[key], seen);
-      }
-    }
-    return result;
-  };
-
-  // Serialize the entire event
-  return {
-    type: event.type,
-    path: event.path,
-    timestamp: event.timestamp,
-    // Serialize value-bearing fields
-    ...(event.value !== undefined && { value: serializeValue(event.value) }),
-    ...(event.items !== undefined && { items: serializeValue(event.items) }),
-    ...(event.key !== undefined && { key: serializeValue(event.key) }),
-    ...(event.source !== undefined && { source: event.source }),
-    ...(event.start !== undefined && { start: event.start }),
-    ...(event.deleteCount !== undefined && { deleteCount: event.deleteCount }),
-    ...(event.target !== undefined && { target: event.target }),
-    ...(event.end !== undefined && { end: event.end }),
-  };
-}
+// NOTE: serializeEvent() removed - events in the log are already fully serialized.
+// Re-serializing them was breaking {__type__: 'ref'} objects for circular references.
 
 /**
  * Export current state as JSON snapshot
@@ -587,13 +519,83 @@ async function exportSnapshot(): Promise<void> {
     return;
   }
 
+  // Warn user that snapshots cannot be re-imported
+  const confirmed = confirm(
+    "📸 Export Snapshot (External Use Only)\n\n" +
+    "⚠️  IMPORTANT: Snapshots CANNOT be re-imported into Filer.\n\n" +
+    "Snapshots are for:\n" +
+    "• Sharing data with external tools\n" +
+    "• Data analysis and reporting\n" +
+    "• Human-readable backups\n\n" +
+    "To save your work for later:\n" +
+    "✅ Use 'Export Event Log' instead (re-importable)\n\n" +
+    "Continue with snapshot export?"
+  );
+
+  if (!confirmed) {
+    setStatus("Snapshot export cancelled", "info");
+    return;
+  }
+
   try {
     console.log("Exporting snapshot...");
 
-    // Serialize the entire memory image state
-    // Use serializeMemoryImage directly with empty proxyToTarget map
-    // since the transaction root doesn't use the standard MEMIMG proxy system
-    const stateJson = serializeMemoryImage(root, new WeakMap());
+    // CRITICAL: Deep unwrap transaction proxies before serialization
+    // Transaction proxies wrap Date objects, causing toISOString() to fail
+    // We need to recursively unwrap everything to get plain JavaScript objects
+    const deepUnwrap = (obj: any, seen = new WeakSet()): any => {
+      // Primitives
+      if (obj === null || obj === undefined) return obj;
+      if (typeof obj !== 'object') return obj;
+
+      // Prevent infinite recursion on circular refs
+      if (seen.has(obj)) return obj;
+      seen.add(obj);
+
+      // Unwrap transaction proxy (one level)
+      const unwrapped = txn!.unwrap(obj);
+
+      // If it's a Date, return it (no need to recurse)
+      if (unwrapped instanceof Date) return unwrapped;
+
+      // If it's an Array, recursively unwrap elements
+      if (Array.isArray(unwrapped)) {
+        return unwrapped.map(item => deepUnwrap(item, seen));
+      }
+
+      // If it's a Map, recursively unwrap entries
+      if (unwrapped instanceof Map) {
+        const result = new Map();
+        unwrapped.forEach((value, key) => {
+          result.set(deepUnwrap(key, seen), deepUnwrap(value, seen));
+        });
+        return result;
+      }
+
+      // If it's a Set, recursively unwrap values
+      if (unwrapped instanceof Set) {
+        const result = new Set();
+        unwrapped.forEach(value => {
+          result.add(deepUnwrap(value, seen));
+        });
+        return result;
+      }
+
+      // Plain object - recursively unwrap properties
+      const result: any = {};
+      for (const key in unwrapped as Record<string, unknown>) {
+        if (Object.prototype.hasOwnProperty.call(unwrapped, key)) {
+          result[key] = deepUnwrap((unwrapped as any)[key], seen);
+        }
+      }
+      return result;
+    };
+
+    // Deep unwrap the entire transaction root to plain JavaScript objects
+    const unwrappedRoot = deepUnwrap(root);
+
+    // Serialize the unwrapped state
+    const stateJson = serializeMemoryImage(unwrappedRoot, new WeakMap());
     const state = JSON.parse(stateJson);
 
     // Create snapshot object with metadata
@@ -650,9 +652,9 @@ async function exportEvents(): Promise<void> {
       return;
     }
 
-    // Serialize events to handle cycles, then convert to NDJSON
+    // Events in the log are already fully serialized (with proper {__type__: 'ref'} objects)
+    // Just convert directly to NDJSON - DO NOT re-serialize or we'll break circular refs!
     const ndjson = events
-      .map(e => serializeEvent(e))
       .map(e => JSON.stringify(e))
       .join('\n');
 
@@ -672,68 +674,9 @@ async function exportEvents(): Promise<void> {
   }
 }
 
-/**
- * Deserialize an event, restoring Date objects and other special types
- */
-function deserializeEvent(event: any): any {
-  // Helper to deserialize a value recursively
-  const deserializeValue = (value: any): any => {
-    if (value === null || value === undefined) return value;
-    if (typeof value !== 'object') return value;
-
-    // Handle special __type__ markers
-    if (value.__type__) {
-      switch (value.__type__) {
-        case "date":
-          return new Date(value.value);
-        case "map":
-          return new Map(value.entries.map(([k, v]: any) => [
-            deserializeValue(k),
-            deserializeValue(v)
-          ]));
-        case "set":
-          return new Set(value.values.map(deserializeValue));
-        case "cyclic_ref":
-          // Note: Cyclic references are lost during export/import
-          // This is expected behavior for event logs
-          return value;
-        default:
-          // Unknown type, return as-is
-          return value;
-      }
-    }
-
-    // Handle Array
-    if (Array.isArray(value)) {
-      return value.map(deserializeValue);
-    }
-
-    // Handle plain objects
-    const result: any = {};
-    for (const key in value) {
-      if (value.hasOwnProperty(key)) {
-        result[key] = deserializeValue(value[key]);
-      }
-    }
-    return result;
-  };
-
-  // Deserialize the entire event
-  return {
-    type: event.type,
-    path: event.path,
-    timestamp: event.timestamp,
-    // Deserialize value-bearing fields
-    ...(event.value !== undefined && { value: deserializeValue(event.value) }),
-    ...(event.items !== undefined && { items: deserializeValue(event.items) }),
-    ...(event.key !== undefined && { key: deserializeValue(event.key) }),
-    ...(event.source !== undefined && { source: event.source }),
-    ...(event.start !== undefined && { start: event.start }),
-    ...(event.deleteCount !== undefined && { deleteCount: event.deleteCount }),
-    ...(event.target !== undefined && { target: event.target }),
-    ...(event.end !== undefined && { end: event.end }),
-  };
-}
+// NOTE: deserializeEvent() removed - events are already fully serialized in the log.
+// They are deserialized during replay by deserializeEventValue() which uses the
+// correct logic from deserialize.ts (handles __dateValue__ for dates, etc.)
 
 /**
  * Import snapshot or event log file
@@ -745,142 +688,92 @@ async function importEvents(file: File): Promise<void> {
   }
 
   try {
-    console.log(`Importing from ${file.name}...`);
+    console.log(`Importing event log from ${file.name}...`);
 
     // Read file content
     const content = await file.text();
 
-    // Try to detect if it's a snapshot (single JSON object) or event log (NDJSON)
-    let isSnapshot = false;
-    let snapshot: any = null;
-
+    // Detect if user is trying to import a snapshot (not supported)
     try {
-      // Try parsing as single JSON object
       const parsed = JSON.parse(content);
       if (parsed && typeof parsed === 'object' && parsed.type === 'snapshot') {
-        isSnapshot = true;
-        snapshot = parsed;
-        console.log("Detected snapshot format");
+        setStatus(
+          "Snapshot files cannot be imported. Use 'Export Event Log' to create re-importable files.",
+          "error"
+        );
+        alert(
+          "⚠️  Snapshot Import Not Supported\n\n" +
+          "Snapshot files are for external consumption only and cannot be re-imported.\n\n" +
+          "To save and restore your data:\n" +
+          "• Use 'Export Event Log' (not 'Export Snapshot')\n" +
+          "• Event logs can be imported to restore your work\n\n" +
+          "Snapshots are useful for sharing data with other tools,\n" +
+          "but only Event Logs preserve the mutation history needed for import."
+        );
+        return;
       }
     } catch {
-      // Not a single JSON object, try NDJSON
-      console.log("Not a snapshot, trying NDJSON format");
+      // Not a single JSON object - good, it's probably NDJSON
     }
 
-    if (isSnapshot && snapshot) {
-      // Import snapshot
-      console.log(`Importing snapshot: ${snapshot.name || 'unnamed'}`);
+    // Parse NDJSON event log (one JSON per line)
+    const lines = content
+      .trim()
+      .split('\n')
+      .filter(line => line.trim());
 
-      // Confirm with user
-      if (!confirm(`Import snapshot "${snapshot.name || file.name}"? This will replace all current data.`)) {
-        return;
-      }
-
-      // Clear current event log
-      if (persistentEventLog?.clear) {
-        await persistentEventLog.clear();
-        console.log("Cleared existing event log");
-      }
-
-      // Deserialize the state
-      const deserializedState = deserializeMemoryImageFromJson(snapshot.state);
-
-      // Create a SET event for the entire state
-      // We'll set each top-level property as a separate event
-      if (deserializedState && typeof deserializedState === 'object') {
-        for (const key in deserializedState) {
-          if (Object.prototype.hasOwnProperty.call(deserializedState, key)) {
-            const event = {
-              type: 'SET' as const,
-              path: [key],
-              value: (deserializedState as any)[key],
-              timestamp: snapshot.timestamp || Date.now()
-            };
-            await persistentEventLog.append(event as any);
-          }
-        }
-      }
-
-      console.log("Snapshot imported successfully");
-
-      // Recreate transaction from imported snapshot
-      txn = await createTransaction(persistentEventLog);
-      root = txn.root;
-      (window as any).root = root;
-
-      // Wire unwrap function for Date detection
-      setUnwrapFunction(txn.unwrap.bind(txn));
-
-      // Reset navigation to initial state
-      navigation.reset();
-
-      // Update dirty state
-      updateDirtyState();
-
-      setStatus(`Imported snapshot from ${file.name}`, 'success');
-      await render();
-
-    } else {
-      // Import event log (NDJSON)
-      console.log("Importing event log (NDJSON)");
-
-      // Parse NDJSON (one JSON per line)
-      const lines = content
-        .trim()
-        .split('\n')
-        .filter(line => line.trim());
-
-      if (lines.length === 0) {
-        setStatus("No events found in file", "error");
-        return;
-      }
-
-      const events = lines.map(line => {
-        try {
-          const parsed = JSON.parse(line);
-          return deserializeEvent(parsed);
-        } catch (err) {
-          throw new Error(`Invalid JSON in file: ${line.slice(0, 50)}...`);
-        }
-      });
-
-      console.log(`Parsed ${events.length} events`);
-
-      // Confirm with user
-      if (!confirm(`Import ${events.length} events? This will replace all current data.`)) {
-        return;
-      }
-
-      // Clear current event log
-      if (persistentEventLog?.clear) {
-        await persistentEventLog.clear();
-        console.log("Cleared existing event log");
-      }
-
-      // Replay events
-      for (const event of events) {
-        await persistentEventLog.append(event);
-      }
-
-      console.log(`Replayed ${events.length} events`);
-
-      // Recreate transaction from imported events
-      txn = await createTransaction(persistentEventLog);
-      root = txn.root;
-      (window as any).root = root;
-
-      // Wire unwrap function for Date detection
-      setUnwrapFunction(txn.unwrap.bind(txn));
-
-      // Reset navigation to initial state
-      navigation.reset();
-
-      // Update dirty state
-      updateDirtyState();
-
-      setStatus(`Imported ${events.length} events from ${file.name}`, 'success');
-      await render();
+    if (lines.length === 0) {
+      setStatus("No events found in file", "error");
+      return;
     }
+
+    // Parse events from NDJSON
+    // Events are already fully serialized - don't deserialize yet!
+    // They'll be deserialized during replay by deserializeEventValue()
+    const events = lines.map(line => {
+      try {
+        return JSON.parse(line);
+      } catch (err) {
+        throw new Error(`Invalid JSON in file: ${line.slice(0, 50)}...`);
+      }
+    });
+
+    console.log(`Parsed ${events.length} events`);
+
+    // Confirm with user
+    if (!confirm(`Import ${events.length} events? This will replace all current data.`)) {
+      return;
+    }
+
+    // Clear current event log
+    if (persistentEventLog?.clear) {
+      await persistentEventLog.clear();
+      console.log("Cleared existing event log");
+    }
+
+    // Replay events
+    for (const event of events) {
+      await persistentEventLog.append(event);
+    }
+
+    console.log(`Replayed ${events.length} events`);
+
+    // Recreate transaction from imported events
+    txn = await createTransaction(persistentEventLog);
+    root = txn.root;
+    (window as any).root = root;
+
+    // Wire unwrap function for Date detection
+    setUnwrapFunction(txn.unwrap.bind(txn));
+
+    // Reset navigation to initial state
+    navigation.reset();
+
+    // Update dirty state
+    updateDirtyState();
+
+    setStatus(`Imported ${events.length} events from ${file.name}`, 'success');
+    await render();
   } catch (err) {
     const error = err as Error;
     setStatus("Import error: " + error.message, "error");
