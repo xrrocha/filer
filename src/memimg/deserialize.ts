@@ -388,6 +388,144 @@ export function deserializeSnapshot(json: string | unknown): unknown {
 }
 
 /**
+ * Deserializes an event value with hierarchical scoped reference resolution.
+ *
+ * WHY: Event values exhibit closure semantics over the memory graph.
+ *
+ * Like closures in programming languages, event values have:
+ * - **Internal structure** (local scope): Objects appearing multiple times within the value
+ * - **Captured external context** (free variables): References to objects in the memory graph
+ *
+ * This requires hierarchical scoped resolution - exactly like variable lookup in nested scopes.
+ *
+ * WHAT: Performs two-pass deserialization with hierarchical scoped reference resolution:
+ * 1. Try resolving from value scope first (internal refs - relative paths)
+ * 2. Fall back to memory scope if not found (external refs - absolute paths)
+ *
+ * HOW: The resolver implements lexical scoping for reference resolution:
+ * - **Local scope (value)**: Try resolving path from the value being deserialized
+ * - **Outer scope (memory)**: Fall back to memory graph if not found locally
+ * - Only throw error if BOTH scopes fail to resolve the path
+ *
+ * This matches the serialization behavior of EventCycleTracker which creates:
+ * - **Internal refs**: Relative paths for objects within the value (stripped of currentPath prefix)
+ * - **External refs**: Absolute paths for objects in the memory graph (outside value tree)
+ *
+ * The hierarchical resolution is NOT a special case - it's the CORRECT semantics
+ * for closure-like structures, identical to variable lookup in nested scopes.
+ *
+ * @param value - Serialized event value (JSON string or object from serializeValueForEvent)
+ * @param memoryRoot - Root of the memory graph for external ref resolution
+ * @returns Deserialized value with all refs resolved (internal + external)
+ *
+ * @example
+ * ```typescript
+ * // Event: SET root.dept = {...}
+ * // The value may contain refs to both:
+ * // - Internal objects (within the value being set) - relative paths
+ * // - External objects (already in memory graph) - absolute paths
+ *
+ * const deserialized = deserializeEventValue(
+ *   setEvent.value,
+ *   memoryRoot
+ * );
+ * // Internal refs resolve from value scope
+ * // External refs resolve from memory scope
+ * ```
+ */
+export function deserializeEventValue(
+  value: unknown,
+  memoryRoot: unknown
+): unknown {
+  const parsed = typeof value === "string" ? JSON.parse(value) : value;
+
+  /**
+   * Hierarchical scoped resolver - implements closure semantics.
+   *
+   * WHY: Event values are closures over the memory graph. References need
+   * hierarchical scoped resolution: try local first, then outer scope.
+   *
+   * WHAT: Attempts to resolve the reference path from two scopes:
+   * 1. Value scope (local) - for internal references with relative paths
+   * 2. Memory scope (outer) - for external references with absolute paths
+   *
+   * HOW: This is exactly like variable resolution in nested scopes:
+   *
+   *   function outer() {
+   *     const x = 1;        // outer scope (memory graph)
+   *     function inner() {
+   *       const y = 2;      // local scope (value being deserialized)
+   *       return x + y;     // x from outer, y from local
+   *     }
+   *   }
+   *
+   * The resolver tries local scope (value) first. If not found, tries
+   * outer scope (memory). Only throws if BOTH fail.
+   */
+  const resolveRef = (path: Path, valueRoot: unknown): unknown => {
+    // Step 1: Try value scope first (internal refs - relative paths)
+    //
+    // WHY: Internal refs are objects appearing multiple times within the value.
+    // EventCycleTracker creates these with relative paths (stripped of currentPath).
+    //
+    // WHAT: Walk the path from valueRoot. If successful, return the target.
+    //
+    // HOW: Navigate path segments. If any segment is undefined, path doesn't
+    // exist in value scope - try memory scope instead.
+    //
+    // EXAMPLE: path=['internal', 'obj'] in value {internal: {obj: {...}}}
+    let target: any = valueRoot;
+    let foundInValueScope = true;
+
+    for (const segment of path) {
+      const next = target?.[segment];
+      if (next === undefined) {
+        // Path doesn't exist in value scope
+        foundInValueScope = false;
+        break;
+      }
+      target = next;
+    }
+
+    // If found in value scope, return it immediately
+    // This is the "local variable" case in closure semantics
+    if (foundInValueScope) {
+      return target;
+    }
+
+    // Step 2: Fall back to memory scope (external refs - absolute paths)
+    //
+    // WHY: External refs point to objects that already existed in the memory
+    // graph before this event value was created.
+    //
+    // WHAT: Walk the path from memoryRoot. Throw if not found.
+    //
+    // HOW: Navigate path segments from memory root. If not found, this is
+    // a true error - path doesn't exist in either scope.
+    //
+    // EXAMPLE: path=['emps', '0'] for root.emps[0] from memory
+    target = memoryRoot;
+    for (const segment of path) {
+      const next = (target as Record<string, unknown>)?.[segment];
+      if (next === undefined) {
+        // Path doesn't exist in either scope - this is an error
+        throw new Error(
+          `Cannot resolve event value ref path: ${path.join(".")} ` +
+          `(not found in value scope or memory scope)`
+        );
+      }
+      target = next;
+    }
+
+    // Successfully resolved from outer scope
+    // This is the "free variable" case in closure semantics
+    return target;
+  };
+
+  return deserializeTwoPass(parsed, resolveRef);
+}
+
+/**
  * Deserializes a JSON string into a plain JavaScript object graph.
  *
  * WHY: Backward compatibility - this was the original API for snapshot deserialization.
