@@ -184,16 +184,35 @@ const deserializers: Record<string, (obj: any, parsed: any) => any> = {
 // ============================================================================
 
 /**
- * Deserializes a JSON string into a plain JavaScript object graph.
+ * Core two-pass deserialization algorithm with pluggable reference resolution.
  *
- * Uses two-pass algorithm:
- * 1. First pass: traverse and replace special types, mark refs as unresolved
- * 2. Second pass: resolve all references to actual objects
+ * WHY: Different serialization modes (snapshot vs event) require different
+ * reference resolution strategies. This function extracts the shared two-pass
+ * algorithm and makes resolution strategy pluggable via the resolveRef parameter.
  *
- * CRITICAL: Must mutate objects in place to maintain object identity!
+ * WHAT: Performs two-pass deserialization:
+ * - Pass 1: Traverse object graph, reconstruct special types, collect unresolved refs
+ * - Pass 2: Resolve all references using the provided resolver function
+ *
+ * HOW: The algorithm maintains object identity by mutating objects in place.
+ * The resolver function determines HOW references are resolved (single-context
+ * vs hierarchical scoped resolution).
+ *
+ * This is the shared implementation used by both deserializeSnapshot and
+ * deserializeEventValue. The only difference is the reference resolution strategy.
+ *
+ * @param parsed - Pre-parsed JSON or object to deserialize
+ * @param resolveRef - Function to resolve a reference path to an object
+ *                     Signature: (path: Path, root: unknown) => unknown
+ *                     The 'root' passed is the deserialized result from pass 1
+ * @returns Deserialized object graph with all refs resolved
+ *
+ * CRITICAL: Must mutate objects in place to maintain object identity for cycles!
  */
-export const deserializeMemoryImage = (json: string | unknown): unknown => {
-  const parsed = typeof json === "string" ? JSON.parse(json) : json;
+function deserializeTwoPass(
+  parsed: unknown,
+  resolveRef: (path: Path, root: unknown) => unknown
+): unknown {
   const unresolvedRefs: Array<{
     parent: any;
     key: string | null;
@@ -296,18 +315,13 @@ export const deserializeMemoryImage = (json: string | unknown): unknown => {
   // If the top-level object is a special type (e.g., Date), traverse returns the deserialized result
   const result = traverse(parsed);
 
-  // Second pass: resolve all refs
+  // Second pass: resolve all refs using the pluggable resolver
   for (const ref of unresolvedRefs) {
     const { parent, key, path } = ref;
 
-    // Navigate to the referenced object
-    let target: any = result;
-    for (const segment of path) {
-      target = target[segment];
-      if (target === undefined) {
-        throw new Error(`Cannot resolve reference path: ${path.join(".")}`);
-      }
-    }
+    // Use the pluggable resolver to get the target object
+    // The resolver determines the resolution strategy (single-context vs hierarchical)
+    const target = resolveRef(path, result);
 
     // Replace the placeholder with the actual reference
     if (parent && key !== null) {
@@ -316,6 +330,47 @@ export const deserializeMemoryImage = (json: string | unknown): unknown => {
   }
 
   return result;
+}
+
+/**
+ * Deserializes a JSON string into a plain JavaScript object graph.
+ *
+ * This is an alias for deserializeSnapshot, maintained for backward compatibility.
+ *
+ * Uses two-pass algorithm:
+ * 1. First pass: traverse and replace special types, mark refs as unresolved
+ * 2. Second pass: resolve all references to actual objects
+ *
+ * CRITICAL: Must mutate objects in place to maintain object identity!
+ *
+ * @param json - JSON string or parsed object
+ * @returns Deserialized object graph
+ */
+export const deserializeMemoryImage = (json: string | unknown): unknown => {
+  const parsed = typeof json === "string" ? JSON.parse(json) : json;
+
+  /**
+   * Single-context resolver for snapshot deserialization.
+   *
+   * WHY: Snapshots have all references relative to the snapshot root.
+   * All paths are absolute from the single context (the snapshot itself).
+   *
+   * WHAT: Navigate from root following the path segments.
+   *
+   * HOW: Simple path traversal - no hierarchical scoping needed.
+   */
+  const resolveRef = (path: Path, root: unknown) => {
+    let target = root;
+    for (const segment of path) {
+      target = (target as Record<string, unknown>)[segment];
+      if (target === undefined) {
+        throw new Error(`Cannot resolve reference path: ${path.join(".")}`);
+      }
+    }
+    return target;
+  };
+
+  return deserializeTwoPass(parsed, resolveRef);
 };
 
 /**
