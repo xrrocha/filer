@@ -333,20 +333,32 @@ function deserializeTwoPass(
 }
 
 /**
- * Deserializes a JSON string into a plain JavaScript object graph.
+ * Deserializes a snapshot JSON into a plain JavaScript object graph.
  *
- * This is an alias for deserializeSnapshot, maintained for backward compatibility.
+ * WHY: Snapshots are created by serializeMemoryImage which uses SnapshotCycleTracker.
+ * All references in a snapshot use absolute paths from the snapshot root (single-context).
  *
- * Uses two-pass algorithm:
- * 1. First pass: traverse and replace special types, mark refs as unresolved
- * 2. Second pass: resolve all references to actual objects
+ * WHAT: Performs two-pass deserialization with single-context reference resolution:
+ * - Pass 1: Reconstruct objects and special types
+ * - Pass 2: Resolve all references from the snapshot root
  *
- * CRITICAL: Must mutate objects in place to maintain object identity!
+ * HOW: Uses deserializeTwoPass with a simple single-context resolver that
+ * navigates from the root following path segments. No hierarchical scoping needed.
  *
- * @param json - JSON string or parsed object
- * @returns Deserialized object graph
+ * Single-context resolution matches the serialization behavior of SnapshotCycleTracker
+ * which creates refs for all objects seen during serialization, with paths from root.
+ *
+ * @param json - JSON string or parsed object from serializeMemoryImage
+ * @returns Deserialized object graph with cycles restored
+ *
+ * @example
+ * ```typescript
+ * const json = serializeMemoryImage(root, proxyToTarget);
+ * const restored = deserializeSnapshot(json);
+ * // All circular references and object identity preserved
+ * ```
  */
-export const deserializeMemoryImage = (json: string | unknown): unknown => {
+export function deserializeSnapshot(json: string | unknown): unknown {
   const parsed = typeof json === "string" ? JSON.parse(json) : json;
 
   /**
@@ -364,14 +376,36 @@ export const deserializeMemoryImage = (json: string | unknown): unknown => {
     for (const segment of path) {
       target = (target as Record<string, unknown>)[segment];
       if (target === undefined) {
-        throw new Error(`Cannot resolve reference path: ${path.join(".")}`);
+        throw new Error(
+          `Cannot resolve snapshot ref path: ${path.join(".")}`
+        );
       }
     }
     return target;
   };
 
   return deserializeTwoPass(parsed, resolveRef);
-};
+}
+
+/**
+ * Deserializes a JSON string into a plain JavaScript object graph.
+ *
+ * WHY: Backward compatibility - this was the original API for snapshot deserialization.
+ *
+ * WHAT: Alias for deserializeSnapshot. All behavior is identical.
+ *
+ * HOW: Direct function reference (not a wrapper).
+ *
+ * Uses two-pass algorithm:
+ * 1. First pass: traverse and replace special types, mark refs as unresolved
+ * 2. Second pass: resolve all references to actual objects
+ *
+ * CRITICAL: Must mutate objects in place to maintain object identity!
+ *
+ * @param json - JSON string or parsed object
+ * @returns Deserialized object graph
+ */
+export const deserializeMemoryImage = deserializeSnapshot;
 
 /**
  * Reconstructs a value from event data, resolving references to existing
