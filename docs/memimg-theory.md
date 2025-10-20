@@ -82,12 +82,17 @@ This section maps the theory from Part I to the concrete design decisions in the
 
 ![Diagram 4](img/memimg/diagram-4.png)
 
--   **Decision (`collection-wrapper.ts`)**: The logic for wrapping Array, Map, and Set methods was refactored into a single, data-driven function. This is a design choice for maintainability and adherence to the DRY (Don't Repeat Yourself) principle, as proven by its focused unit tests.
+-   **Decision (`collection-wrapper.ts`)**: The logic for wrapping Array, Map, and Set methods was refactored into a single, data-driven function. This is a design choice for maintainability and adherence to the DRY (Don't Repeat Yourself) principle, as proven by its focused unit tests. The specific methods that are wrapped are defined in the `MUTATING_ARRAY_METHODS`, `MUTATING_MAP_METHODS`, and `MUTATING_SET_METHODS` constants in `src/memimg/constants.ts`, which provides a single source of truth.
 
 ### `event-handlers.ts` (The Event Registry)
 
 -   **Design**: Implements the **Registry** and **Strategy** design patterns for handling the 18 different mutation types.
 -   **Decision**: This design explicitly avoids a monolithic `switch` statement for event creation and application. By giving each event type its own handler class (`SetEventHandler`, `ArrayPushHandler`, etc.), the logic for each mutation is cleanly decoupled. This makes the system easily extensible and independently testable, as demonstrated by the exhaustive tests in `event-handlers.test.ts`.
+
+### `type-classifier.ts` (Foundation: Type Classification)
+
+-   **Design**: Provides a centralized, single source of truth for classifying JavaScript values. It uses the `ValueCategory` enum to categorize every possible JavaScript type (`string`, `number`, `Date`, `Map`, etc.).
+-   **Decision**: Centralizing type-checking in this module eliminates dozens of scattered `typeof` and `instanceof` checks throughout the codebase. This is a crucial design choice for maintainability and consistency. For example, the `isObject` helper function in `src/foundation/js-types.ts` (re-exported by `type-classifier.ts`) defines that for `memimg`, functions are considered objects, which is a key detail for the proxying logic. This avoids ambiguity and ensures that all parts of the system agree on what constitutes an "object", a "collection", or a "primitive".
 
 ### `serialize.ts` & `deserialize.ts` (State Marshalling)
 
