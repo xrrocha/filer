@@ -273,13 +273,11 @@
                 <div id="history-list" class="sidebar-content"></div>
             </div>
 
-            <div class="app-title">Filer Navigator</div>
-
-            <!-- Header -->
-            <header>
-                <div class="logo">
+            <!-- Compact Header -->
+            <header class="compact-header">
+                <div class="header-left">
                     <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"
-                    width="32" height="32" aria-label="Navigator">
+                    width="28" height="28" aria-label="Navigator">
                         <circle cx="24" cy="24" r="22" fill="#6366f1"/>
                         <line x1="24" y1="14" x2="16" y2="24" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
                         <line x1="24" y1="14" x2="32" y2="24" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
@@ -295,36 +293,32 @@
                         font-size="5.5" font-weight="bold" fill="#ffffff"
                         text-anchor="middle" letter-spacing="1.5">Navigator</text>
                     </svg>
-                    <div class="header-info">
-                        <button id="back-to-list-btn" class="back-button">← Back to List</button>
-                        <h1 id="current-memimg-name">Memory Image</h1>
-                    </div>
+                    <span class="app-title-inline">Filer Navigator</span>
+                    <span class="title-separator">|</span>
+                    <h1 id="current-memimg-name" class="memimg-name-inline">Memory Image</h1>
                 </div>
-                <div class="controls">
-                    <div class="controls-left">
-                        <button id="theme-toggle-explorer" class="icon-btn" title="Toggle theme">🌙</button>
-                        <span id="dirty-indicator" class="dirty-indicator" style="display: none;">● Unsaved</span>
-                        <button id="save-btn" title="Save to IndexedDB">💾 Save</button>
-                        <button id="discard-btn" title="Discard unsaved changes" style="display: none;">↩️ Discard</button>
-                        <button id="export-events-btn" title="✅ Export event log (NDJSON format - CAN be re-imported)">📜 Export Event Log</button>
-                        <button id="import-events-btn" title="Import event log (NDJSON format only - snapshots cannot be imported)">📥 Import Event Log</button>
-                        <button id="export-snapshot-btn" title="⚠️  Export current state as JSON (for external use only - CANNOT be re-imported)">📸 Snapshot (External)</button>
-                        <button id="clear-btn" title="Clear all data">🗑️ Clear</button>
-                    </div>
-                    <div class="controls-right">
-                        <button id="load-scott-btn" title="Load example data">📂 Load Example</button>
-                    </div>
+                <div class="header-right">
+                    <button id="back-to-list-btn" class="compact-btn" title="Back to list">← Back</button>
+                    <button id="save-btn" class="compact-btn" title="Save to IndexedDB">💾 Save</button>
+                    <button id="discard-btn" class="compact-btn" title="Discard unsaved changes" style="display: none;">↩️ Discard</button>
+                    <button id="export-events-btn" class="compact-btn" title="✅ Export event log (NDJSON format - CAN be re-imported)">📜 Export Events</button>
+                    <button id="import-events-btn" class="compact-btn" title="Import event log (NDJSON format only - snapshots cannot be imported)">📥 Import Events</button>
+                    <button id="export-snapshot-btn" class="compact-btn" title="⚠️  Export current state as JSON (for external use only - CANNOT be re-imported)">📸 Snapshot</button>
+                    <button id="clear-btn" class="compact-btn" title="Clear all data">🗑️ Clear</button>
+                    <button id="load-scott-btn" class="compact-btn" title="Load example data">📂 Load Example</button>
+                    <button id="theme-toggle-explorer" class="icon-btn compact-btn" title="Toggle theme">☀️</button>
                 </div>
-                <!-- Hidden file input for import -->
-                <input type="file" id="events-file-input" accept=".json,.ndjson,.txt" style="display: none">
-                <div id="status" class="status-bar"></div>
             </header>
+            <!-- Hidden file input for import -->
+            <input type="file" id="events-file-input" accept=".json,.ndjson,.txt" style="display: none">
+            <div id="status" class="status-bar"></div>
 
             <!-- Code editor (TOP panel) -->
             <section id="editor-panel" class="panel">
                 <div class="panel-header">
                     <h2>Code Editor</h2>
                     <div class="editor-controls">
+                        <button id="maximize-editor-btn" class="icon-btn" title="Maximize editor (Alt+E)">⛶</button>
                         <button id="toggle-line-numbers-btn" class="icon-btn" title="Toggle line numbers">#</button>
                         <button id="toggle-history-btn" title="Show script history">📜 History</button>
                         <button id="run-btn" title="Run code (Ctrl+Enter)">▶ Run</button>
@@ -347,6 +341,7 @@
                     <div class="panel-header">
                         <h2>Object Graph</h2>
                         <div class="nav-buttons">
+                            <button id="maximize-graph-btn" class="icon-btn" title="Maximize graph (Alt+G)">⛶</button>
                             <button id="back-btn" title="Back (Alt+Left)" disabled>◀</button>
                             <button id="forward-btn" title="Forward (Alt+Right)" disabled>▶</button>
                         </div>

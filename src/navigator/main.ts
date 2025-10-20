@@ -142,20 +142,16 @@ function updateDirtyState(): void {
   // Check if transaction has uncommitted changes
   const dirty = txn ? txn.isDirty() : false;
 
-  const indicator = document.getElementById(
-    "dirty-indicator",
-  ) as HTMLDivElement;
-  const discardBtn = document.getElementById(
-    "discard-btn",
-  ) as HTMLButtonElement;
+  const saveBtn = document.getElementById("save-btn") as HTMLButtonElement;
+  const discardBtn = document.getElementById("discard-btn") as HTMLButtonElement;
 
-  if (!indicator || !discardBtn) return;
+  if (!saveBtn || !discardBtn) return;
 
   if (dirty) {
-    indicator.style.display = "flex";
+    saveBtn.classList.add("dirty");
     discardBtn.style.display = "inline-block";
   } else {
-    indicator.style.display = "none";
+    saveBtn.classList.remove("dirty");
     discardBtn.style.display = "none";
   }
 }
@@ -794,6 +790,33 @@ function setupResizeHandles(): void {
     let prevPanel: HTMLElement | null = null;
     let nextPanel: HTMLElement | null = null;
 
+    // Double-click to balance panels 50/50
+    handle.addEventListener('dblclick', (e: MouseEvent) => {
+      e.preventDefault();
+      const direction = handle.dataset.direction;
+      const prev = handle.previousElementSibling as HTMLElement;
+      const next = handle.nextElementSibling as HTMLElement;
+
+      if (!prev || !next) return;
+
+      const total = direction === 'vertical'
+        ? prev.offsetHeight + next.offsetHeight
+        : prev.offsetWidth + next.offsetWidth;
+      const half = Math.floor(total / 2);
+
+      if (direction === 'vertical') {
+        prev.style.flex = 'none';
+        prev.style.height = `${half}px`;
+        next.style.flex = 'none';
+        next.style.height = `${half}px`;
+      } else {
+        prev.style.flex = 'none';
+        prev.style.width = `${half}px`;
+        next.style.flex = 'none';
+        next.style.width = `${half}px`;
+      }
+    });
+
     handle.addEventListener('mousedown', (e: MouseEvent) => {
       e.preventDefault();
 
@@ -827,8 +850,8 @@ function setupResizeHandles(): void {
       const newSize = startSize + delta;
       const newSizeNext = startSizeNext - delta;
 
-      // Enforce min sizes
-      const minSize = 200;
+      // Enforce min sizes (lowered from 200px to 50px for better flexibility)
+      const minSize = 50;
       if (newSize < minSize || newSizeNext < minSize) return;
 
       if (direction === 'vertical') {
@@ -1198,6 +1221,129 @@ function initializeTheme(): void {
 }
 
 /**
+ * Panel layout management
+ */
+interface PanelSizes {
+  editorHeight: number;
+  graphHeight: number;
+}
+
+let savedPanelSizes: PanelSizes | null = null;
+let currentLayout: 'balanced' | 'editor-max' | 'graph-max' = 'balanced';
+
+function maximizeEditor(): void {
+  const editorPanel = document.getElementById('editor-panel') as HTMLElement;
+  const bottomPanels = document.getElementById('bottom-panels') as HTMLElement;
+
+  if (!editorPanel || !bottomPanels) return;
+
+  // Save current sizes if not already maximized
+  if (currentLayout !== 'editor-max') {
+    savedPanelSizes = {
+      editorHeight: editorPanel.offsetHeight,
+      graphHeight: bottomPanels.offsetHeight
+    };
+  }
+
+  const total = editorPanel.offsetHeight + bottomPanels.offsetHeight;
+  editorPanel.style.flex = 'none';
+  editorPanel.style.height = `${total - 50}px`;
+  bottomPanels.style.flex = 'none';
+  bottomPanels.style.height = '50px';
+
+  currentLayout = 'editor-max';
+  updateMaximizeButtons();
+}
+
+function maximizeGraph(): void {
+  const editorPanel = document.getElementById('editor-panel') as HTMLElement;
+  const bottomPanels = document.getElementById('bottom-panels') as HTMLElement;
+
+  if (!editorPanel || !bottomPanels) return;
+
+  // Save current sizes if not already maximized
+  if (currentLayout !== 'graph-max') {
+    savedPanelSizes = {
+      editorHeight: editorPanel.offsetHeight,
+      graphHeight: bottomPanels.offsetHeight
+    };
+  }
+
+  // Give OGN all vertical space (collapse editor to minimum)
+  // Keep tree AND inspector both visible at their current proportions
+  const total = editorPanel.offsetHeight + bottomPanels.offsetHeight;
+  editorPanel.style.flex = 'none';
+  editorPanel.style.height = '50px';
+  bottomPanels.style.flex = 'none';
+  bottomPanels.style.height = `${total - 50}px`;
+
+  currentLayout = 'graph-max';
+  updateMaximizeButtons();
+}
+
+function balancePanels(): void {
+  const editorPanel = document.getElementById('editor-panel') as HTMLElement;
+  const bottomPanels = document.getElementById('bottom-panels') as HTMLElement;
+
+  if (!editorPanel || !bottomPanels) return;
+
+  // If we have saved sizes and we're coming from a maximized state, restore them
+  if (savedPanelSizes && currentLayout !== 'balanced') {
+    editorPanel.style.flex = 'none';
+    editorPanel.style.height = `${savedPanelSizes.editorHeight}px`;
+    bottomPanels.style.flex = 'none';
+    bottomPanels.style.height = `${savedPanelSizes.graphHeight}px`;
+    savedPanelSizes = null;
+  } else {
+    // Otherwise, split 50/50 vertically (editor vs OGN)
+    const total = editorPanel.offsetHeight + bottomPanels.offsetHeight;
+    const half = Math.floor(total / 2);
+    editorPanel.style.flex = 'none';
+    editorPanel.style.height = `${half}px`;
+    bottomPanels.style.flex = 'none';
+    bottomPanels.style.height = `${half}px`;
+  }
+
+  currentLayout = 'balanced';
+  updateMaximizeButtons();
+}
+
+function toggleEditorMaximize(): void {
+  if (currentLayout === 'editor-max') {
+    balancePanels();
+  } else {
+    maximizeEditor();
+  }
+}
+
+function toggleGraphMaximize(): void {
+  if (currentLayout === 'graph-max') {
+    balancePanels();
+  } else {
+    maximizeGraph();
+  }
+}
+
+function updateMaximizeButtons(): void {
+  const editorBtn = document.getElementById('maximize-editor-btn') as HTMLButtonElement;
+  const graphBtn = document.getElementById('maximize-graph-btn') as HTMLButtonElement;
+
+  if (editorBtn) {
+    editorBtn.textContent = currentLayout === 'editor-max' ? '⛶' : '⛶';
+    editorBtn.title = currentLayout === 'editor-max'
+      ? 'Restore editor (Alt+E)'
+      : 'Maximize editor (Alt+E)';
+  }
+
+  if (graphBtn) {
+    graphBtn.textContent = currentLayout === 'graph-max' ? '⛶' : '⛶';
+    graphBtn.title = currentLayout === 'graph-max'
+      ? 'Restore graph (Alt+G)'
+      : 'Maximize graph (Alt+G)';
+  }
+}
+
+/**
  * Setup event listeners
  */
 function setupEventListeners(): void {
@@ -1231,7 +1377,7 @@ function setupEventListeners(): void {
     });
   }
 
-  // Keyboard shortcuts for navigation
+  // Keyboard shortcuts for navigation and panel management
   document.addEventListener("keydown", (e: KeyboardEvent) => {
     if (e.altKey && e.key === "ArrowLeft") {
       e.preventDefault();
@@ -1240,6 +1386,19 @@ function setupEventListeners(): void {
     if (e.altKey && e.key === "ArrowRight") {
       e.preventDefault();
       navigation.goForward();
+    }
+    // Panel management shortcuts
+    if (e.altKey && e.key.toLowerCase() === "e") {
+      e.preventDefault();
+      toggleEditorMaximize();
+    }
+    if (e.altKey && e.key.toLowerCase() === "g") {
+      e.preventDefault();
+      toggleGraphMaximize();
+    }
+    if (e.altKey && e.key.toLowerCase() === "b") {
+      e.preventDefault();
+      balancePanels();
     }
   });
 
@@ -1293,6 +1452,17 @@ function setupEventListeners(): void {
   const toggleLineNumbersBtn = document.getElementById("toggle-line-numbers-btn") as HTMLButtonElement;
   if (toggleLineNumbersBtn) {
     toggleLineNumbersBtn.addEventListener("click", toggleLineNumbers);
+  }
+
+  // Panel maximize buttons
+  const maximizeEditorBtn = document.getElementById("maximize-editor-btn") as HTMLButtonElement;
+  if (maximizeEditorBtn) {
+    maximizeEditorBtn.addEventListener("click", toggleEditorMaximize);
+  }
+
+  const maximizeGraphBtn = document.getElementById("maximize-graph-btn") as HTMLButtonElement;
+  if (maximizeGraphBtn) {
+    maximizeGraphBtn.addEventListener("click", toggleGraphMaximize);
   }
 
   // NOTE: Editor keyboard shortcuts are set up per-memimg in openMemoryImage()

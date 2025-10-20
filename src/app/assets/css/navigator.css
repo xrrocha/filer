@@ -113,7 +113,7 @@ body {
     height: 100vh;
 }
 
-/* App Title */
+/* App Title (for list view) */
 .app-title {
     background: var(--bg-tertiary);
     color: var(--text-secondary);
@@ -126,13 +126,77 @@ body {
     flex-shrink: 0;
 }
 
-/* Header */
+/* Header (list view) */
 header {
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border-primary);
     flex-shrink: 0;
 }
 
+/* Compact Header (explorer view) */
+.compact-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-primary);
+    padding: 6px 12px;
+    gap: 16px;
+    flex-shrink: 0;
+    min-height: 40px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 1;
+    min-width: 0; /* Allow text truncation */
+}
+
+.header-left svg {
+    flex-shrink: 0;
+}
+
+.app-title-inline {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.title-separator {
+    color: var(--text-muted);
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.memimg-name-inline {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.compact-btn {
+    padding: 4px 8px;
+    font-size: 12px;
+    min-width: unset;
+}
+
+/* Logo (for list view) */
 .logo {
     display: flex;
     align-items: center;
@@ -158,6 +222,7 @@ header {
     font-weight: 400;
 }
 
+/* Controls (for list view) */
 .controls {
     display: flex;
     gap: 8px;
@@ -197,7 +262,7 @@ header {
     color: var(--success-text);
 }
 
-/* Dirty State Indicator */
+/* Dirty State Indicator (legacy - kept for list view if needed) */
 .dirty-indicator {
     display: inline-flex;
     align-items: center;
@@ -221,6 +286,27 @@ header {
     50% {
         box-shadow: 0 0 0 3px rgba(244, 135, 113, 0);
     }
+}
+
+/* Save Button - Dirty State (Unsaved Changes) */
+#save-btn.dirty {
+    animation: save-pulse 3s ease-in-out infinite;
+}
+
+@keyframes save-pulse {
+    0%, 100% {
+        background: var(--accent-primary);
+        box-shadow: 0 0 0 0 rgba(244, 135, 113, 0.7);
+    }
+    50% {
+        background: #c75146;
+        box-shadow: 0 0 0 4px rgba(244, 135, 113, 0);
+    }
+}
+
+#save-btn.dirty:hover {
+    background: #d66058;
+    animation: none; /* Stop pulsing on hover */
 }
 
 /* Buttons */
@@ -255,7 +341,7 @@ button:disabled {
     display: flex;
     flex-direction: row;
     overflow: hidden;
-    min-height: 150px;
+    min-height: 50px;
 }
 
 /* Panels */
@@ -466,7 +552,7 @@ button:disabled {
 #editor-panel {
     border-bottom: 1px solid var(--border-primary);
     flex: 1;
-    min-height: 150px;
+    min-height: 50px;
     display: flex;
     flex-direction: column;
 }
