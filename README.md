@@ -2,7 +2,7 @@
 
 What if you could define your domain—a recipe collection, a reading list, a family tree, or yes, employees and departments—and immediately see a working app? No classes to write, no schemas to migrate, no UI templates to build, no deploy cycles. Just define your model and run it. Whether you're building personal tools or enterprise systems, the complexity is the same: it stems from separating metadata (your model) from data (your instances). When they're unified, an entire category of accidental complexity disappears: migrations, builds, code generation, version coordination. The result: software you can shape to your needs—personal, professional, or anywhere in between.
 
-**This is Filer.**
+**This is Filer: a radical exploration of (and in) simplicity**
 
 ---
 
