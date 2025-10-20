@@ -242,31 +242,32 @@ export async function createTransaction(
       // Shared seen map for unwrapping - preserves identity across all delta entries
       const seen = new WeakMap<object, any>();
 
-      // CRITICAL: Build targetToPath map from baseRaw for reference tracking
-      // This allows serialization to create proper references to existing objects
-      const targetToPath = new WeakMap<object, string[]>();
-      const buildPathMap = (obj: any, path: string[] = []) => {
+      // Helper to build targetToPath map from baseRaw for reference tracking
+      const buildPathMap = (targetToPath: WeakMap<object, string[]>, obj: any, path: string[] = []) => {
         if (obj === null || typeof obj !== 'object') return;
         if (targetToPath.has(obj)) return; // Already visited
 
         targetToPath.set(obj, path);
 
         if (Array.isArray(obj)) {
-          obj.forEach((item, idx) => buildPathMap(item, [...path, String(idx)]));
+          obj.forEach((item, idx) => buildPathMap(targetToPath, item, [...path, String(idx)]));
         } else if (obj instanceof Map) {
           let idx = 0;
-          obj.forEach((val) => buildPathMap(val, [...path, `map:${idx++}`]));
+          obj.forEach((val) => buildPathMap(targetToPath, val, [...path, `map:${idx++}`]));
         } else if (obj instanceof Set) {
           let idx = 0;
-          obj.forEach((val) => buildPathMap(val, [...path, `set:${idx++}`]));
+          obj.forEach((val) => buildPathMap(targetToPath, val, [...path, `set:${idx++}`]));
         } else if (!(obj instanceof Date)) {
-          Object.entries(obj).forEach(([key, val]) => buildPathMap(val, [...path, key]));
+          Object.entries(obj).forEach(([key, val]) => buildPathMap(targetToPath, val, [...path, key]));
         }
       };
-      buildPathMap(baseRaw);
 
       // Apply delta to baseRaw and log events
       for (const [pathStr, value] of sortedDelta) {
+        // CRITICAL: Rebuild targetToPath BEFORE each serialization
+        // This ensures objects applied in previous iterations are tracked for ref detection
+        const targetToPath = new WeakMap<object, string[]>();
+        buildPathMap(targetToPath, baseRaw);
         const pathParts = pathStr.split('.');
 
         // Navigate to parent in baseRaw
