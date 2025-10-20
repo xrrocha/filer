@@ -164,7 +164,7 @@ const Emp = ObjectType({
 
 ### Try It (No Installation)
 
-Download [`dist/index.html`](dist/index.html) and open it in your browser. That's it.
+You can try it [online](https://xrrocha.github.io/filer.html) (or download [`dist/index.html`](dist/index.html) and open it in your browser). That's it.
 
 ### Develop
 
