@@ -14,7 +14,7 @@ What if you could define your domain—a recipe collection, a reading list, a fa
 
 ### Try It Now (Zero Setup)
 
-You can try it [online](https://rrocha.me/projects/filer) (runs locally on your
+You can try it [online](https://rrocha.me/projects/filer) (runs *locally* on your
 machine; absolutely none of your data sent anywhere).
 
 Or, to run it on your own machine:
