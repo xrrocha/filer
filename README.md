@@ -226,7 +226,7 @@ Filer builds on ideas from several foundational sources:
 - **[Martin Fowler's Memory Image](https://martinfowler.com/bliki/MemoryImage.html)** — Core pattern for keeping the entire domain model in memory
 - **[Prevayler](https://prevayler.org)** — Pioneer in transparent, event sourcing-based object persistence for Java
 - **[KMemImg](https://amauta.medium.com/memory-image-in-kotlin-a2b7782ed842)** — Previous implementation exploring memory image concepts in Kotlin
-- **[UNIFILE.pdf](https://rrocha.me/projects/filer/references/UNIFILE.pdf)** — Academic foundation exploring user-level conceptual modeling and visualization
+- **[UNIFILE.pdf](docs/UNIFILE.pdf)** — Academic foundation exploring user-level conceptual modeling and visualization
 
 ---
 
