@@ -160,37 +160,18 @@ export class ValidationError extends Error {
 }
 
 // =============================================================================
-// PROPERTY DESCRIPTOR (Layers 2 + 3)
+// METADATA INTERFACES (Layers 2 + 3) - Separated by Concern
 // =============================================================================
 
 /**
- * Complete property descriptor with UI metadata (Layer 2) and validation metadata (Layer 3).
+ * UI Metadata - Layer 2
  *
- * This is the FULL schema - some features may not be enforced initially but are
- * declared here for:
- * - Documentation
- * - Introspection
- * - Code generation
- * - Future enforcement
+ * Everything related to display and presentation.
+ * Used by Navigator, form generators, table views, etc.
  */
-export interface PropertyDescriptor {
-  // ==========================================================================
-  // LAYER 1: Structural Type
-  // ==========================================================================
-
-  /**
-   * The type of this property (required).
-   * Can be primitive (NumberType, StringType) or object type (Dept, Emp).
-   */
-  type: Type;
-
-  // ==========================================================================
-  // LAYER 2: UI Metadata (Display & Presentation)
-  // ==========================================================================
-
+export interface UIMetadata {
   /**
    * Human-readable label for UI display.
-   * Used in forms, tables, detail views.
    *
    * @example
    * label: "Department Number"
@@ -204,7 +185,6 @@ export interface PropertyDescriptor {
    *
    * @example
    * formatter: (v) => `$${v.toFixed(2)}`  // Money
-   * formatter: (v) => v.toUpperCase()     // Uppercase
    * formatter: (v) => new Date(v).toLocaleDateString()  // Date
    */
   formatter?: (value: unknown) => string;
@@ -214,11 +194,8 @@ export interface PropertyDescriptor {
    * Hints to UI generators which input control to use.
    *
    * @example
-   * widget: 'text'      // <input type="text">
    * widget: 'number'    // <input type="number">
-   * widget: 'date'      // <input type="date">
    * widget: 'select'    // <select> dropdown
-   * widget: 'textarea'  // <textarea> for long text
    */
   widget?: 'text' | 'number' | 'date' | 'datetime' | 'time' | 'email' | 'url' |
            'select' | 'radio' | 'checkbox' | 'textarea' | 'password';
@@ -233,7 +210,6 @@ export interface PropertyDescriptor {
 
   /**
    * Help text / description shown near the input.
-   * Explains what the field is for or constraints.
    *
    * @example
    * helpText: "Department number must be between 10 and 9999"
@@ -242,40 +218,35 @@ export interface PropertyDescriptor {
 
   /**
    * CSS class(es) to apply to the input/display element.
-   * Enables custom styling.
    *
    * @example
-   * cssClass: "currency-input"
-   * cssClass: "highlighted required-field"
+   * cssClass: "currency-input highlighted"
    */
   cssClass?: string;
 
   /**
    * Whether this field should be hidden in default views.
-   * Hidden fields still exist but don't show in auto-generated UIs.
    */
   hidden?: boolean;
 
   /**
    * Display order/priority (lower numbers appear first).
-   * Used for controlling field ordering in forms/tables.
    *
    * @example
    * order: 1  // Show first
-   * order: 99 // Show last
    */
   order?: number;
+}
 
-  // ==========================================================================
-  // LAYER 3: Validation & Integrity Constraints
-  // ==========================================================================
-
+/**
+ * Validation Metadata - Layer 3a
+ *
+ * Everything related to integrity constraints and validation.
+ * Uses ONLY the validations array - no ad-hoc shortcuts!
+ */
+export interface ValidationMetadata {
   /**
    * Whether this property is required (cannot be null/undefined).
-   *
-   * When enforced:
-   * - Construction: Must provide value or initialValue must return value
-   * - Assignment: Cannot set to null/undefined
    *
    * @default false
    */
@@ -284,107 +255,96 @@ export interface PropertyDescriptor {
   /**
    * Whether this property can be set during object construction.
    *
-   * When enforced:
-   * - true: Can provide in ObjectType({...}) call
-   * - false: Cannot provide, only settable via initialValue or later assignment
-   *
    * @default true
    */
   enterable?: boolean;
 
   /**
    * Whether this property can be updated after initial assignment.
-   *
-   * When enforced:
-   * - true: Can change value after first set
-   * - false: Immutable once set (like a primary key)
-   *
-   * Use case: empno, deptno (set once, never change)
+   * Use for immutable fields like primary keys.
    *
    * @default true
+   * @example
+   * updatable: false  // empno, deptno (set once, never change)
    */
   updatable?: boolean;
 
   /**
    * Factory function for default/initial value.
-   * Called during construction if no value provided by user.
-   *
    * Must be a function (not direct value) to avoid sharing references.
    *
    * @example
-   * initialValue: () => []           // Empty array (new instance each time)
+   * initialValue: () => []           // New array each time
    * initialValue: () => Date.now()   // Current timestamp
-   * initialValue: () => ({ x: 0 })   // Default object
    */
   initialValue?: () => unknown;
 
   /**
    * Array of validation rules for this property.
-   * Rules checked on assignment (when enforcement enabled).
+   * This is the ONLY validation mechanism - use composable validators!
    *
    * @example
-   * validations: [{
-   *   rule: (v) => v > 0,
-   *   errorMessage: (v) => `Must be positive, got ${v}`
-   * }, {
-   *   rule: (v) => v <= 9999,
-   *   errorMessage: "Cannot exceed 9999"
-   * }]
+   * validations: [
+   *   isInteger(),
+   *   range(10, 9999),
+   *   pattern(/^[A-Z]+$/)
+   * ]
    */
   validations?: ValidationRule[];
+}
+
+/**
+ * Lifecycle Metadata - Layer 3b
+ *
+ * Hooks for lifecycle events (future use).
+ */
+export interface LifecycleMetadata {
+  /**
+   * Called after property is created/initialized.
+   */
+  onCreate?: (value: unknown) => void;
 
   /**
-   * Minimum value (for numbers/dates).
-   * Convenience shorthand for validation rule.
-   *
-   * @example
-   * min: 0      // Non-negative
-   * min: 1000   // At least 1000
+   * Called before property value changes.
    */
-  min?: number;
+  onUpdate?: (oldValue: unknown, newValue: unknown) => void;
 
   /**
-   * Maximum value (for numbers/dates).
-   * Convenience shorthand for validation rule.
-   *
-   * @example
-   * max: 9999   // Cannot exceed 9999
+   * Called when property/object is deleted.
    */
-  max?: number;
+  onDelete?: (value: unknown) => void;
+}
+
+/**
+ * Property Descriptor - Complete metadata for a property.
+ *
+ * Clean separation of concerns via nested namespaces:
+ * - type: Structural (always present)
+ * - ui: Display/presentation (optional)
+ * - validation: Integrity constraints (optional)
+ * - lifecycle: Event hooks (optional, future)
+ */
+export interface PropertyDescriptor {
+  /**
+   * The type of this property (required).
+   * Can be primitive (NumberType, StringType) or object type (Dept, Emp).
+   */
+  type: Type;
 
   /**
-   * Minimum length (for strings/arrays).
-   *
-   * @example
-   * minLength: 1    // Non-empty
-   * minLength: 3    // At least 3 characters
+   * UI metadata - everything related to display and presentation.
    */
-  minLength?: number;
+  ui?: UIMetadata;
 
   /**
-   * Maximum length (for strings/arrays).
-   * * @example
-   * maxLength: 14   // Max 14 characters
+   * Validation metadata - integrity constraints and validation rules.
    */
-  maxLength?: number;
+  validation?: ValidationMetadata;
 
   /**
-   * Regular expression pattern (for strings).
-   *
-   * @example
-   * pattern: /^[A-Z]+$/           // Uppercase only
-   * pattern: /^\d{3}-\d{2}-\d{4}$/ // SSN format
+   * Lifecycle metadata - event hooks (future use).
    */
-  pattern?: RegExp;
-
-  /**
-   * Enum of allowed values.
-   *
-   * @example
-   * enum: ['MANAGER', 'ANALYST', 'CLERK', 'SALESMAN']
-   * enum: [10, 20, 30, 40]  // Valid dept numbers
-   */
-  enum?: unknown[];
+  lifecycle?: LifecycleMetadata;
 }
 
 /**
