@@ -122,12 +122,269 @@ export class BaseObjectType extends Type {
   }
 }
 
+// =============================================================================
+// VALIDATION RULES (Layer 3)
+// =============================================================================
+
 /**
- * Property descriptor for user-defined ObjectType properties
+ * Validation rule for property or object-level constraints.
+ *
+ * Rules are declarative - they describe constraints without enforcing them.
+ * Enforcement happens via Proxy traps (property-level) or explicit validate() calls (object-level).
+ */
+export interface ValidationRule<T = unknown> {
+  /**
+   * Validation predicate - returns true if valid, false otherwise
+   */
+  rule: (value: T) => boolean;
+
+  /**
+   * Error message to show when validation fails.
+   * Can be static string or function for context-aware messages.
+   *
+   * @example
+   * errorMessage: "Must be positive"
+   * errorMessage: (v) => `Expected positive, got ${v}`
+   */
+  errorMessage: string | ((value: T) => string);
+}
+
+/**
+ * Validation error thrown when constraints are violated
+ */
+export class ValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
+
+// =============================================================================
+// PROPERTY DESCRIPTOR (Layers 2 + 3)
+// =============================================================================
+
+/**
+ * Complete property descriptor with UI metadata (Layer 2) and validation metadata (Layer 3).
+ *
+ * This is the FULL schema - some features may not be enforced initially but are
+ * declared here for:
+ * - Documentation
+ * - Introspection
+ * - Code generation
+ * - Future enforcement
  */
 export interface PropertyDescriptor {
+  // ==========================================================================
+  // LAYER 1: Structural Type
+  // ==========================================================================
+
+  /**
+   * The type of this property (required).
+   * Can be primitive (NumberType, StringType) or object type (Dept, Emp).
+   */
   type: Type;
-  // Layer 2 additions will go here: label?, formatter?, widget?, etc.
+
+  // ==========================================================================
+  // LAYER 2: UI Metadata (Display & Presentation)
+  // ==========================================================================
+
+  /**
+   * Human-readable label for UI display.
+   * Used in forms, tables, detail views.
+   *
+   * @example
+   * label: "Department Number"
+   * label: "Employee Name"
+   */
+  label?: string;
+
+  /**
+   * Format a value for display.
+   * Converts internal representation to user-friendly string.
+   *
+   * @example
+   * formatter: (v) => `$${v.toFixed(2)}`  // Money
+   * formatter: (v) => v.toUpperCase()     // Uppercase
+   * formatter: (v) => new Date(v).toLocaleDateString()  // Date
+   */
+  formatter?: (value: unknown) => string;
+
+  /**
+   * UI widget/control type for forms.
+   * Hints to UI generators which input control to use.
+   *
+   * @example
+   * widget: 'text'      // <input type="text">
+   * widget: 'number'    // <input type="number">
+   * widget: 'date'      // <input type="date">
+   * widget: 'select'    // <select> dropdown
+   * widget: 'textarea'  // <textarea> for long text
+   */
+  widget?: 'text' | 'number' | 'date' | 'datetime' | 'time' | 'email' | 'url' |
+           'select' | 'radio' | 'checkbox' | 'textarea' | 'password';
+
+  /**
+   * Placeholder text for empty inputs.
+   *
+   * @example
+   * placeholder: "Enter department name..."
+   */
+  placeholder?: string;
+
+  /**
+   * Help text / description shown near the input.
+   * Explains what the field is for or constraints.
+   *
+   * @example
+   * helpText: "Department number must be between 10 and 9999"
+   */
+  helpText?: string;
+
+  /**
+   * CSS class(es) to apply to the input/display element.
+   * Enables custom styling.
+   *
+   * @example
+   * cssClass: "currency-input"
+   * cssClass: "highlighted required-field"
+   */
+  cssClass?: string;
+
+  /**
+   * Whether this field should be hidden in default views.
+   * Hidden fields still exist but don't show in auto-generated UIs.
+   */
+  hidden?: boolean;
+
+  /**
+   * Display order/priority (lower numbers appear first).
+   * Used for controlling field ordering in forms/tables.
+   *
+   * @example
+   * order: 1  // Show first
+   * order: 99 // Show last
+   */
+  order?: number;
+
+  // ==========================================================================
+  // LAYER 3: Validation & Integrity Constraints
+  // ==========================================================================
+
+  /**
+   * Whether this property is required (cannot be null/undefined).
+   *
+   * When enforced:
+   * - Construction: Must provide value or initialValue must return value
+   * - Assignment: Cannot set to null/undefined
+   *
+   * @default false
+   */
+  required?: boolean;
+
+  /**
+   * Whether this property can be set during object construction.
+   *
+   * When enforced:
+   * - true: Can provide in ObjectType({...}) call
+   * - false: Cannot provide, only settable via initialValue or later assignment
+   *
+   * @default true
+   */
+  enterable?: boolean;
+
+  /**
+   * Whether this property can be updated after initial assignment.
+   *
+   * When enforced:
+   * - true: Can change value after first set
+   * - false: Immutable once set (like a primary key)
+   *
+   * Use case: empno, deptno (set once, never change)
+   *
+   * @default true
+   */
+  updatable?: boolean;
+
+  /**
+   * Factory function for default/initial value.
+   * Called during construction if no value provided by user.
+   *
+   * Must be a function (not direct value) to avoid sharing references.
+   *
+   * @example
+   * initialValue: () => []           // Empty array (new instance each time)
+   * initialValue: () => Date.now()   // Current timestamp
+   * initialValue: () => ({ x: 0 })   // Default object
+   */
+  initialValue?: () => unknown;
+
+  /**
+   * Array of validation rules for this property.
+   * Rules checked on assignment (when enforcement enabled).
+   *
+   * @example
+   * validations: [{
+   *   rule: (v) => v > 0,
+   *   errorMessage: (v) => `Must be positive, got ${v}`
+   * }, {
+   *   rule: (v) => v <= 9999,
+   *   errorMessage: "Cannot exceed 9999"
+   * }]
+   */
+  validations?: ValidationRule[];
+
+  /**
+   * Minimum value (for numbers/dates).
+   * Convenience shorthand for validation rule.
+   *
+   * @example
+   * min: 0      // Non-negative
+   * min: 1000   // At least 1000
+   */
+  min?: number;
+
+  /**
+   * Maximum value (for numbers/dates).
+   * Convenience shorthand for validation rule.
+   *
+   * @example
+   * max: 9999   // Cannot exceed 9999
+   */
+  max?: number;
+
+  /**
+   * Minimum length (for strings/arrays).
+   *
+   * @example
+   * minLength: 1    // Non-empty
+   * minLength: 3    // At least 3 characters
+   */
+  minLength?: number;
+
+  /**
+   * Maximum length (for strings/arrays).
+   * * @example
+   * maxLength: 14   // Max 14 characters
+   */
+  maxLength?: number;
+
+  /**
+   * Regular expression pattern (for strings).
+   *
+   * @example
+   * pattern: /^[A-Z]+$/           // Uppercase only
+   * pattern: /^\d{3}-\d{2}-\d{4}$/ // SSN format
+   */
+  pattern?: RegExp;
+
+  /**
+   * Enum of allowed values.
+   *
+   * @example
+   * enum: ['MANAGER', 'ANALYST', 'CLERK', 'SALESMAN']
+   * enum: [10, 20, 30, 40]  // Valid dept numbers
+   */
+  enum?: unknown[];
 }
 
 /**
@@ -191,9 +448,9 @@ export function ObjectType(spec: ObjectTypeSpec): ObjectTypeFactory {
     return instance;
   } as ObjectTypeFactory;
 
-  // Setup prototype chain - factory extends BaseObjectType
+  // Make the factory extend BaseObjectType
+  // We can't use .call() with ES6 classes, so we manually setup the inheritance
   Object.setPrototypeOf(factory, BaseObjectType.prototype);
-  BaseObjectType.call(factory, name);
 
   // Setup instance prototype chain
   factory.prototype = prototype ? Object.create(prototype) : {};
