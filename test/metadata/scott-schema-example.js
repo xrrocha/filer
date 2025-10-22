@@ -285,8 +285,46 @@ const Emp = ObjectType({
           instanceOf(Dept)
         ]
       }
+    },
+
+    mgr: {
+      name: 'mgr',
+      type: () => Emp,  // Thunk for self-reference
+
+      ui: {
+        label: 'Manager',
+        formatter: (v) => v?.ename || 'None',
+        widget: 'select',
+        helpText: 'Employee\'s manager (must be in same department)',
+        order: 8,
+      },
+
+      validation: {
+        required: false,  // President has no manager
+        enterable: true,
+        updatable: true,
+        validations: []  // instanceOf will be checked via type
+      }
     }
-  }
+  },
+
+  // Object-level validations (cross-property constraints)
+  validations: [
+    {
+      name: 'mgr-dept-consistency',
+      properties: ['dept', 'mgr'],
+      validate(emp) {
+        // Manager must be in same department (if manager exists)
+        return !emp.mgr || emp.mgr.dept === emp.dept;
+      },
+      errorMessage(emp, lang = 'en') {
+        if (lang === 'en') {
+          return `Manager must be in same department (employee in ${emp.dept?.dname}, manager in ${emp.mgr?.dept?.dname})`;
+        }
+        return 'Manager must be in same department';
+      }
+    }
+  ]
 });
 
 // =============================================================================
@@ -411,6 +449,92 @@ try {
   console.log('✗ Unexpected error:', e.message);
 }
 
+// Test 9: Object-level validation (deferred until commit)
+console.log('\nTest 9: Object-level validation (manager-dept consistency)');
+try {
+  // First, import ValidationState for checking pending validations
+  const { ValidationState } = await import('../../dist/metadata/javascript-types.js');
+
+  const engineering = Dept({ deptno: 20, dname: 'ENGINEERING', loc: 'BOSTON' });
+  const research = Dept({ deptno: 40, dname: 'RESEARCH', loc: 'DALLAS' });
+
+  // Create manager in engineering
+  const alice = Emp({
+    empno: 7900,
+    ename: 'ALICE',
+    job: 'MANAGER',
+    hiredate: new Date('2020-01-15'),
+    sal: 5000,
+    comm: null,
+    dept: engineering,
+    mgr: null  // No manager (she's a manager)
+  });
+  console.log('✓ Manager created:', alice.ename, 'in', alice.dept.dname);
+
+  // Create employee in research with manager from engineering
+  // This violates mgr-dept-consistency, but doesn't throw immediately!
+  const bob = Emp({
+    empno: 7901,
+    ename: 'BOB',
+    job: 'ANALYST',
+    hiredate: new Date('2021-03-10'),
+    sal: 3500,
+    comm: null,
+    dept: research,
+    mgr: alice  // Manager in different dept - INVALID!
+  });
+  console.log('✓ Employee created with invalid mgr-dept (no immediate error)');
+  console.log('  Employee:', bob.ename, 'in', bob.dept.dname);
+  console.log('  Manager:', bob.mgr.ename, 'in', bob.mgr.dept.dname);
+
+  // Check pending validations
+  if (ValidationState.hasPending()) {
+    const pending = ValidationState.getPending();
+    console.log('✓ Object-level validation is PENDING (deferred):');
+    pending.forEach(p => {
+      console.log('  - Validations:', p.validations.join(', '));
+    });
+
+    // At commit time, memimg would reject this with ValidationError
+    console.log('✓ Commit would be REJECTED due to pending validations');
+
+    // Fix the violation by moving Bob to engineering
+    bob.dept = engineering;
+    console.log('✓ Fixed: Moved', bob.ename, 'to', bob.dept.dname);
+
+    // Validation should be removed
+    if (!ValidationState.hasPending()) {
+      console.log('✓ Validation passed - no longer pending');
+      console.log('✓ Commit would now SUCCEED');
+    } else {
+      console.log('✗ Validation still pending (unexpected)');
+    }
+
+    // Alternative fix: change manager instead of dept
+    bob.dept = research;  // Back to research
+    console.log('✓ Moved back to', bob.dept.dname, '- validation pending again');
+
+    bob.mgr = null;  // Remove manager
+    console.log('✓ Removed manager - validation should pass');
+
+    if (!ValidationState.hasPending()) {
+      console.log('✓ Validation passed by removing manager');
+    } else {
+      console.log('✗ Validation still pending (unexpected)');
+    }
+
+  } else {
+    console.log('✗ Expected pending validation but found none');
+  }
+
+  // Clean up for next test
+  ValidationState.clear();
+
+} catch (e) {
+  console.log('✗ Unexpected error:', e.message);
+  console.error(e);
+}
+
 console.log('\n=== All Validation Tests Complete ===');
-console.log('Proxy delegates validation to pluggable strategy!');
-console.log('Validates immediately on every property assignment');
+console.log('Property-level: Validates immediately on every assignment');
+console.log('Object-level: Deferred until commit (allows multi-step mutations)');

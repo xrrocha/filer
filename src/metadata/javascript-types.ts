@@ -127,50 +127,129 @@ export class BaseObjectType extends Type {
 // =============================================================================
 
 /**
- * Validation rule for property or object-level constraints.
+ * Base interface for all validation rules.
  *
- * Rules are declarative - they describe constraints without enforcing them.
- * Enforcement happens via Proxy traps (property-level) or explicit validate() calls (object-level).
+ * Captures the common structure shared by property-level and object-level validations.
+ * Uses method signatures (not arrow functions) to enable ES6 shorthand pattern
+ * for avoiding closure capture.
  *
- * CRITICAL: Uses method signatures (not function properties) to enable
- * the ES6 shorthand pattern for avoiding closure capture:
- *
- * @example
+ * @example ES6 shorthand pattern to avoid closures
  * const minSal = 85000;
  * const rule = {
  *   minSal,  // ES6 shorthand copies value (no closure!)
- *   validate(value) {
- *     return value >= this.minSal;  // Access via `this`
+ *   validate(arg) {
+ *     return arg >= this.minSal;  // Access via `this`
  *   },
- *   errorMessage(value, lang = 'en') {
- *     const templates = {
- *       'en': `Bad salary, must be above ${this.minSal}`,
- *       'es': `Salario incorrecto, debe ser mayor a ${this.minSal}`
- *     };
- *     return templates[lang];
+ *   errorMessage(arg, lang = 'en') {
+ *     return `Must be >= ${this.minSal}, got ${arg}`;
  *   }
  * };
  */
-export interface ValidationRule {
+export interface ValidationRuleBase {
   /**
    * Validation predicate - returns true if valid, false otherwise.
    * Method (not property) to enable `this` references to captured values.
+   *
+   * @param arg - For property-level: the property value being validated
+   *              For object-level: the entire object being validated
    */
-  validate(value: unknown): boolean;
+  validate(arg: unknown): boolean;
 
   /**
    * Error message generator with i18n support.
    * Method (not property) to enable `this` references to captured values.
    *
-   * @param value - The value that failed validation
+   * @param arg - For property-level: the property value that failed
+   *              For object-level: the object that failed
    * @param lang - Language code (e.g., 'en', 'es', 'pt')
    */
-  errorMessage(value: unknown, lang: string): string;
+  errorMessage(arg: unknown, lang: string): string;
 
   // Additional properties can be added via ES6 shorthand to avoid closures
   // e.g., minSal: 85000, maxSal: 250000
   [key: string]: unknown;
 }
+
+/**
+ * Property-level validation rule.
+ * Validates individual property values immediately on SET.
+ *
+ * @example Salary range validation
+ * const minSal = 85000;
+ * const rule: PropertyValidationRule = {
+ *   minSal,
+ *   validate(value) {
+ *     return value >= this.minSal;
+ *   },
+ *   errorMessage(value, lang = 'en') {
+ *     return `Salary must be >= ${this.minSal}, got ${value}`;
+ *   }
+ * };
+ */
+export interface PropertyValidationRule extends ValidationRuleBase {
+  // Inherits: validate(value), errorMessage(value, lang)
+  // Note: 'arg' parameter is the property value
+}
+
+/**
+ * Object-level validation rule.
+ * Validates cross-property constraints, deferred until all participating
+ * properties are consistent or until commit time.
+ *
+ * Used for constraints that may temporarily fail during multi-step mutations
+ * within a transaction.
+ *
+ * @example Employee relocation (dept + boss must be consistent)
+ * {
+ *   name: 'dept-boss-consistency',
+ *   properties: ['dept', 'boss'],
+ *   validate(emp) {
+ *     // Boss must be in same department as employee
+ *     return emp.boss.dept === emp.dept;
+ *   },
+ *   errorMessage(emp, lang) {
+ *     return `Employee boss must be in same department`;
+ *   }
+ * }
+ *
+ * @example Manager subordinate limit (collection constraint)
+ * {
+ *   name: 'max-subordinates',
+ *   properties: ['subordinates'],
+ *   validate(manager) {
+ *     return manager.subordinates.length <= 10;
+ *   },
+ *   errorMessage(manager, lang) {
+ *     return `Manager cannot have more than 10 subordinates`;
+ *   }
+ * }
+ */
+export interface ObjectValidationRule extends ValidationRuleBase {
+  /**
+   * Unique identifier for this validation.
+   * Used for tracking pending validations in ValidationState.
+   */
+  name: string;
+
+  /**
+   * Properties that participate in this validation.
+   * Mutation of any of these properties adds this validation to pending state.
+   *
+   * String-typed property names (pragmatic trade-off vs thunks for better UX).
+   */
+  properties: string[];
+
+  // Inherits: validate(object), errorMessage(object, lang)
+  // Note: 'arg' parameter is the entire object
+}
+
+/**
+ * Backward compatibility: ValidationRule is now PropertyValidationRule.
+ * Keep this alias for existing code that uses ValidationRule.
+ *
+ * @deprecated Use PropertyValidationRule or ObjectValidationRule explicitly
+ */
+export type ValidationRule = PropertyValidationRule;
 
 /**
  * Validation error thrown when constraints are violated
@@ -179,6 +258,99 @@ export class ValidationError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'ValidationError';
+  }
+}
+
+// =============================================================================
+// VALIDATION STATE - Singleton for tracking pending validations
+// =============================================================================
+
+/**
+ * ValidationState namespace - Companion object pattern (like Scala)
+ *
+ * Provides global validation state management for deferred object-level validations.
+ * Uses object identity (not paths) to track which objects have pending validations.
+ *
+ * ⚠️ WARNING: This is GLOBAL mutable state
+ * - Shared across all ObjectType instances
+ * - Reset on successful commit
+ * - Queried by memimg before commit
+ * - Not thread-safe (JavaScript is single-threaded, but async contexts can interleave)
+ *
+ * Integration with memimg:
+ * - Memimg calls hasPending() before commit
+ * - If pending validations exist, throw error with getPending()
+ * - Call clear() after successful commit
+ *
+ * Design: Uses object identity as key (Map<object, Set<string>>)
+ * - No dependency on memimg paths
+ * - Object reference is sufficient for tracking
+ * - Paths can be computed lazily for error messages if needed
+ */
+export namespace ValidationState {
+  // Private state - Maps objects to sets of pending validation names
+  const _pending = new Map<object, Set<string>>();
+
+  /**
+   * Check if any validations are pending.
+   * Memimg calls this before commit.
+   */
+  export function hasPending(): boolean {
+    return _pending.size > 0;
+  }
+
+  /**
+   * Clear all pending validations.
+   * Called after successful commit.
+   */
+  export function clear(): void {
+    _pending.clear();
+  }
+
+  /**
+   * Add a pending validation for an object.
+   * Called when validation fails during property mutation.
+   *
+   * @param obj - The object with failing validation
+   * @param validationName - Name of the failing validation
+   */
+  export function addPending(obj: object, validationName: string): void {
+    if (!_pending.has(obj)) {
+      _pending.set(obj, new Set());
+    }
+    _pending.get(obj)!.add(validationName);
+  }
+
+  /**
+   * Remove a pending validation.
+   * Called when validation passes on retry.
+   *
+   * @param obj - The object with passing validation
+   * @param validationName - Name of the passing validation
+   */
+  export function removePending(obj: object, validationName: string): void {
+    const validations = _pending.get(obj);
+    if (validations) {
+      validations.delete(validationName);
+      if (validations.size === 0) {
+        _pending.delete(obj);
+      }
+    }
+  }
+
+  /**
+   * Get all pending validations for error reporting.
+   * Returns array of objects with object reference and failing validation names.
+   */
+  export function getPending(): Array<{ obj: object; validations: string[] }> {
+    const result: Array<{ obj: object; validations: string[] }> = [];
+    _pending.forEach((validations, obj) => {
+      result.push({
+        obj,
+        validations: Array.from(validations)
+      });
+    });
+    return result;
   }
 }
 
@@ -479,6 +651,33 @@ export interface PropertyDescriptor {
 }
 
 /**
+ * Compiled metadata built during ObjectType processing.
+ *
+ * Pre-computed indexes for O(1) lookup during runtime operations.
+ *
+ * NOTE: Thunks in property types are resolved LAZILY in proxy traps,
+ * not during compilation. This allows self-references like Emp.mgr: () => Emp.
+ */
+interface CompiledMetadata {
+  /**
+   * Index: property name → object-level validations involving that property.
+   *
+   * Built at compile time by scanning all ObjectValidationRules and indexing
+   * by their `properties` array.
+   *
+   * Used in SET trap for O(1) lookup: "which object validations does this
+   * property participate in?"
+   *
+   * @example
+   * // Given: { name: 'dept-boss', properties: ['dept', 'boss'], ... }
+   * // Index contains:
+   * // 'dept' -> Set([dept-boss-validation])
+   * // 'boss' -> Set([dept-boss-validation])
+   */
+  validationsByProperty: Map<string, Set<ObjectValidationRule>>;
+}
+
+/**
  * Specification for creating a user-defined ObjectType factory
  */
 export interface ObjectTypeSpec {
@@ -486,7 +685,12 @@ export interface ObjectTypeSpec {
   properties?: Record<string, PropertyDescriptor>;
   prototype?: object | null;
   supertype?: ObjectTypeFactory | null;  // Parent type for inheritance
-  validations?: ValidationRule[];  // Object-level validations
+
+  /**
+   * Object-level validations for this type.
+   * Cross-property constraints deferred until commit.
+   */
+  validations?: ObjectValidationRule[];
 }
 
 /**
@@ -502,7 +706,20 @@ export interface ObjectTypeFactory extends BaseObjectType {
   properties: Record<string, PropertyDescriptor>;
   prototype: object;
   supertype?: ObjectTypeFactory | null;  // Parent type reference
-  validations?: ValidationRule[];  // Object-level validations
+
+  /**
+   * Object-level validations for this type.
+   * Inherited from supertype chain and merged with own validations.
+   */
+  validations?: ObjectValidationRule[];
+
+  /**
+   * Compiled metadata (built during ObjectType processing).
+   * Contains pre-computed indexes for efficient runtime lookup.
+   *
+   * @internal
+   */
+  _compiled?: CompiledMetadata;
 
   // Type checking
   check(value: unknown): boolean;
@@ -551,12 +768,36 @@ function collectProperties(
  */
 function collectValidations(
   supertype: ObjectTypeFactory | null,
-  ownValidations: ValidationRule[]
-): ValidationRule[] {
+  ownValidations: ObjectValidationRule[]
+): ObjectValidationRule[] {
   if (!supertype) return [...ownValidations];
 
   const baseValidations = supertype.validations || [];
   return [...baseValidations, ...ownValidations];
+}
+
+/**
+ * Build validation index from object-level validations.
+ * Creates Map<propertyName, Set<ObjectValidationRule>>.
+ *
+ * @param validations - Array of object-level validations
+ * @returns Index for O(1) property → validations lookup
+ */
+function buildValidationIndex(
+  validations: ObjectValidationRule[]
+): Map<string, Set<ObjectValidationRule>> {
+  const index = new Map<string, Set<ObjectValidationRule>>();
+
+  for (const validation of validations) {
+    for (const propName of validation.properties) {
+      if (!index.has(propName)) {
+        index.set(propName, new Set());
+      }
+      index.get(propName)!.add(validation);
+    }
+  }
+
+  return index;
 }
 
 // =============================================================================
@@ -578,8 +819,14 @@ export function ObjectType(spec: ObjectTypeSpec): ObjectTypeFactory {
   // Collect all properties from inheritance chain
   const allProperties = collectProperties(supertype, properties);
 
+  // NOTE: Thunk resolution happens AFTER factory creation (see below)
+  // to allow self-references like: Emp.mgr: () => Emp
+
   // Collect all object-level validations from inheritance chain
   const allValidations = collectValidations(supertype, validations);
+
+  // Build validation index for O(1) lookup
+  const validationIndex = buildValidationIndex(allValidations);
 
   // The factory function - creates proxied instances
   const factory = function (props: Record<string, unknown> = {}): object {
@@ -600,6 +847,11 @@ export function ObjectType(spec: ObjectTypeSpec): ObjectTypeFactory {
           throw new Error(`Property '${propName}' not declared in schema for type ${name}`);
         }
 
+        // Resolve type thunk if present (lazy resolution for self/forward references)
+        const propType = typeof descriptor.type === 'function' && !('typeName' in descriptor.type)
+          ? (descriptor.type as () => Type)()
+          : descriptor.type as Type;
+
         // 2. Enterable check
         if (descriptor.validation?.enterable === false) {
           throw new Error(`Property '${propName}' is not enterable`);
@@ -617,9 +869,9 @@ export function ObjectType(spec: ObjectTypeSpec): ObjectTypeFactory {
 
         // 5. Type validation (always immediate - structural check)
         // Skip type check if value is null and property is optional
-        if (value != null && !descriptor.type.check(value)) {
+        if (value != null && !propType.check(value)) {
           throw new TypeError(
-            `Property '${propName}' expects type ${descriptor.type.typeName}, got ${typeof value}`
+            `Property '${propName}' expects type ${propType.typeName}, got ${typeof value}`
           );
         }
 
@@ -627,7 +879,31 @@ export function ObjectType(spec: ObjectTypeSpec): ObjectTypeFactory {
         ValidationStrategy.current().validateProperty(value, descriptor);
 
         // 7. Execute assignment
-        return Reflect.set(target, prop, value, receiver);
+        const result = Reflect.set(target, prop, value, receiver);
+
+        // 8. Object-level validation handling
+        // Check if this property participates in any object-level validations
+        const relevantValidations = validationIndex.get(propName);
+        if (relevantValidations && relevantValidations.size > 0) {
+          // Try each object-level validation
+          // Use receiver object directly as key (no path needed)
+          relevantValidations.forEach((validation) => {
+            try {
+              if (validation.validate(receiver)) {
+                // Validation passed - remove from pending if it was there
+                ValidationState.removePending(receiver, validation.name);
+              } else {
+                // Validation failed - add to pending
+                ValidationState.addPending(receiver, validation.name);
+              }
+            } catch (error) {
+              // Validation threw an error - treat as failure, add to pending
+              ValidationState.addPending(receiver, validation.name);
+            }
+          });
+        }
+
+        return result;
       },
 
       get(target, prop, receiver) {
@@ -691,6 +967,11 @@ export function ObjectType(spec: ObjectTypeSpec): ObjectTypeFactory {
   factory.properties = allProperties;
   factory.supertype = supertype;
   factory.validations = allValidations;
+
+  // Attach compiled metadata
+  factory._compiled = {
+    validationsByProperty: validationIndex
+  };
 
   // Type checking
   factory.check = function (value: unknown): boolean {
