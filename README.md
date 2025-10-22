@@ -93,7 +93,7 @@ const root2 = await replayEventsFromLog({ eventLog });
 
 **Standalone library**: Works in browser and Node.js. Zero UI coupling. Can be used for server-side persistence, offline-first apps, undo/redo, audit trails.
 
-**Quality**: 929 tests, 94% code coverage, 100% passing.
+**Quality**: 929 tests, 94% code coverage, 100% passing. Production-ready.
 
 [Read the theoretical foundations](./docs/memimg-theory.md)
 
@@ -105,7 +105,7 @@ Browser-based REPL with tree view, property inspector, and script editor.
 
 **Standalone**: Works with any data structure—no domain knowledge required.
 
-**Quality**: 427 tests, 100% passing.
+**Quality**: 427 tests, 100% passing. Production-ready.
 
 ### Metadata: Executable Conceptual Modeling
 
@@ -145,7 +145,15 @@ const Emp = ObjectType({
 
 **No code generation**: Everything synthesized at runtime. Metadata and UI always in sync—impossible to drift apart.
 
-**Status**: Foundation complete, synthesis in progress.
+**What's been built:**
+- ✅ **Type system**: 7 primitive types + user-defined ObjectTypes with inheritance
+- ✅ **Validation**: Property-level (immediate) + object-level (deferred until commit)
+- ✅ **Validators library**: 27 composable validators (numeric, string, date, enum, logical)
+- ✅ **Self-referencing types**: Manager→Employee, Employee→Manager via thunks
+- ✅ **Metadata layers**: Type + Validation + UI + Lifecycle metadata
+- 🚧 **UI synthesis**: In progress (forms/tables from metadata)
+
+**Quality**: 366 tests, >80% code coverage, 99.2% passing. Foundation production-ready.
 
 ---
 
@@ -172,7 +180,7 @@ You can try it [online](https://xrrocha.github.io/filer.html) (or download [`dis
 git clone https://github.com/xrrocha/filer.git
 cd filer
 npm install
-npm test          # 1,359 tests, 94% coverage
+npm test          # 1,722 tests, 90% coverage
 npm run dev       # Development server with hot reload
 ```
 
