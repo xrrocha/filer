@@ -4,12 +4,12 @@ import {
   ObjectType,
   StringType,
   NumberType,
-  ValidationState,
+  getDefaultContext,
 } from '../../../dist/metadata/javascript-types.js';
 
 describe('SET Trap Object-Level Validation Code Paths', () => {
   beforeEach(() => {
-    ValidationState.clear();
+    getDefaultContext().clear();
   });
 
   describe('Validation index lookup', () => {
@@ -40,7 +40,7 @@ describe('SET Trap Object-Level Validation Code Paths', () => {
       person.name = 'Bob';
 
       // Should still be empty (validation only cares about age)
-      assert.strictEqual(ValidationState.hasPending(), false);
+      assert.strictEqual(getDefaultContext().hasPending(), false);
     });
 
     it('checks validation when property participates', () => {
@@ -65,8 +65,8 @@ describe('SET Trap Object-Level Validation Code Paths', () => {
 
       const person = Person({ age: -5 }); // Triggers validation
 
-      assert.strictEqual(ValidationState.hasPending(), true);
-      assert.deepStrictEqual(ValidationState.getPending()[0].validations, ['age-positive']);
+      assert.strictEqual(getDefaultContext().hasPending(), true);
+      assert.deepStrictEqual(getDefaultContext().getPending()[0].validations, ['age-positive']);
     });
 
     it('checks all validations when property participates in multiple', () => {
@@ -111,8 +111,8 @@ describe('SET Trap Object-Level Validation Code Paths', () => {
 
       const person = Person({ age: 10 }); // Fails age-adult
 
-      assert.strictEqual(ValidationState.hasPending(), true);
-      const pending = ValidationState.getPending()[0];
+      assert.strictEqual(getDefaultContext().hasPending(), true);
+      const pending = getDefaultContext().getPending()[0];
       assert.strictEqual(pending.validations.length, 1);
       assert.deepStrictEqual(pending.validations, ['age-adult']);
     });
@@ -140,10 +140,10 @@ describe('SET Trap Object-Level Validation Code Paths', () => {
       });
 
       const person = Person({ age: -5 }); // Fails
-      assert.strictEqual(ValidationState.hasPending(), true);
+      assert.strictEqual(getDefaultContext().hasPending(), true);
 
       person.age = 30; // Passes - should call removePending
-      assert.strictEqual(ValidationState.hasPending(), false);
+      assert.strictEqual(getDefaultContext().hasPending(), false);
     });
 
     it('calls addPending when validation fails', () => {
@@ -168,8 +168,8 @@ describe('SET Trap Object-Level Validation Code Paths', () => {
 
       const person = Person({ age: -5 }); // Should call addPending
 
-      assert.strictEqual(ValidationState.hasPending(), true);
-      const pending = ValidationState.getPending();
+      assert.strictEqual(getDefaultContext().hasPending(), true);
+      const pending = getDefaultContext().getPending();
       assert.strictEqual(pending.length, 1);
       assert.strictEqual(pending[0].obj, person);
       assert.deepStrictEqual(pending[0].validations, ['age-positive']);
@@ -202,8 +202,8 @@ describe('SET Trap Object-Level Validation Code Paths', () => {
       const person = Person({ grade: 'Z' }); // Throws error in validate
 
       // Exception should be caught and treated as failure
-      assert.strictEqual(ValidationState.hasPending(), true);
-      assert.deepStrictEqual(ValidationState.getPending()[0].validations, ['grade-valid']);
+      assert.strictEqual(getDefaultContext().hasPending(), true);
+      assert.deepStrictEqual(getDefaultContext().getPending()[0].validations, ['grade-valid']);
     });
   });
 
@@ -238,7 +238,7 @@ describe('SET Trap Object-Level Validation Code Paths', () => {
       assert.strictEqual(capturedReceiver.age, 30);
     });
 
-    it('passes correct receiver to ValidationState methods', () => {
+    it('passes correct receiver to getDefaultContext() methods', () => {
       const Person = ObjectType({
         name: 'Person',
         properties: {
@@ -261,7 +261,7 @@ describe('SET Trap Object-Level Validation Code Paths', () => {
 
       const person = Person({ name: 'Alice', age: -5 });
 
-      const pending = ValidationState.getPending();
+      const pending = getDefaultContext().getPending();
       assert.strictEqual(pending[0].obj, person);
       assert.strictEqual(pending[0].obj.name, 'Alice');
       assert.strictEqual(pending[0].obj.age, -5);
@@ -290,7 +290,7 @@ describe('SET Trap Object-Level Validation Code Paths', () => {
       const alice = Person({ age: -5 });
       const bob = Person({ age: -10 });
 
-      const pending = ValidationState.getPending();
+      const pending = getDefaultContext().getPending();
       assert.strictEqual(pending.length, 2);
 
       const aliceEntry = pending.find(p => p.obj === alice);
@@ -327,7 +327,7 @@ describe('SET Trap Object-Level Validation Code Paths', () => {
       const obj = Test({ value: 0 }); // 0 is falsy
 
       // 0 should be treated as validation failure
-      assert.strictEqual(ValidationState.hasPending(), true);
+      assert.strictEqual(getDefaultContext().hasPending(), true);
     });
 
     it('handles validation returning truthy non-boolean values', () => {
@@ -353,7 +353,7 @@ describe('SET Trap Object-Level Validation Code Paths', () => {
       const obj = Test({ value: 42 }); // 42 is truthy
 
       // 42 should be treated as validation success
-      assert.strictEqual(ValidationState.hasPending(), false);
+      assert.strictEqual(getDefaultContext().hasPending(), false);
     });
 
     it('handles empty validationIndex gracefully', () => {
@@ -368,8 +368,8 @@ describe('SET Trap Object-Level Validation Code Paths', () => {
       const obj = Simple({ name: 'test' });
       obj.name = 'updated';
 
-      // Should not throw, should not add anything to ValidationState
-      assert.strictEqual(ValidationState.hasPending(), false);
+      // Should not throw, should not add anything to getDefaultContext()
+      assert.strictEqual(getDefaultContext().hasPending(), false);
     });
 
     it('handles property with empty validation set', () => {
@@ -397,11 +397,11 @@ describe('SET Trap Object-Level Validation Code Paths', () => {
 
       // Mutating name doesn't trigger validation
       person.name = 'Bob';
-      assert.strictEqual(ValidationState.hasPending(), false);
+      assert.strictEqual(getDefaultContext().hasPending(), false);
 
       // Mutating age does trigger validation
       person.age = -5;
-      assert.strictEqual(ValidationState.hasPending(), true);
+      assert.strictEqual(getDefaultContext().hasPending(), true);
     });
   });
 
@@ -429,13 +429,13 @@ describe('SET Trap Object-Level Validation Code Paths', () => {
 
       const rect = Rectangle({ width: 0, height: 10 }); // width invalid
 
-      assert.strictEqual(ValidationState.hasPending(), true);
+      assert.strictEqual(getDefaultContext().hasPending(), true);
 
       rect.width = 5; // Now valid
-      assert.strictEqual(ValidationState.hasPending(), false);
+      assert.strictEqual(getDefaultContext().hasPending(), false);
 
       rect.height = 0; // Now invalid again
-      assert.strictEqual(ValidationState.hasPending(), true);
+      assert.strictEqual(getDefaultContext().hasPending(), true);
     });
 
     it('handles validation that re-checks on every property mutation', () => {
@@ -515,7 +515,7 @@ describe('SET Trap Object-Level Validation Code Paths', () => {
 
       const person = Person({ age: 200 }); // Fails age-under-150 and age-adult (passes age-positive)
 
-      const pending = ValidationState.getPending()[0];
+      const pending = getDefaultContext().getPending()[0];
 
       // Only failed validations should be pending
       assert.strictEqual(pending.validations.length, 1);

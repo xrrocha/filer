@@ -4,13 +4,13 @@ import {
   ObjectType,
   StringType,
   NumberType,
-  ValidationState,
+  getDefaultContext,
   type ObjectTypeFactory,
 } from '../../../dist/metadata/javascript-types.js';
 
 describe('Object-Level Validation Flow (Integration)', () => {
   beforeEach(() => {
-    ValidationState.clear();
+    getDefaultContext().clear();
   });
 
   describe('Basic flow', () => {
@@ -37,8 +37,8 @@ describe('Object-Level Validation Flow (Integration)', () => {
 
       const person = Person({ age: 30, retirementAge: 25 }); // Invalid!
 
-      assert.strictEqual(ValidationState.hasPending(), true);
-      const pending = ValidationState.getPending();
+      assert.strictEqual(getDefaultContext().hasPending(), true);
+      const pending = getDefaultContext().getPending();
       assert.strictEqual(pending.length, 1);
       assert.strictEqual(pending[0].obj, person);
       assert.deepStrictEqual(pending[0].validations, ['retirement-after-current']);
@@ -67,7 +67,7 @@ describe('Object-Level Validation Flow (Integration)', () => {
 
       const person = Person({ age: 30, retirementAge: 65 }); // Valid!
 
-      assert.strictEqual(ValidationState.hasPending(), false);
+      assert.strictEqual(getDefaultContext().hasPending(), false);
     });
 
     it('removes from pending when subsequent mutation fixes validation', () => {
@@ -92,10 +92,10 @@ describe('Object-Level Validation Flow (Integration)', () => {
       });
 
       const person = Person({ age: 30, retirementAge: 25 }); // Invalid
-      assert.strictEqual(ValidationState.hasPending(), true);
+      assert.strictEqual(getDefaultContext().hasPending(), true);
 
       person.retirementAge = 65; // Fix it!
-      assert.strictEqual(ValidationState.hasPending(), false);
+      assert.strictEqual(getDefaultContext().hasPending(), false);
     });
 
     it('re-adds to pending when validation fails again', () => {
@@ -120,13 +120,13 @@ describe('Object-Level Validation Flow (Integration)', () => {
       });
 
       const person = Person({ age: 30, retirementAge: 65 }); // Valid initially
-      assert.strictEqual(ValidationState.hasPending(), false);
+      assert.strictEqual(getDefaultContext().hasPending(), false);
 
       person.age = 70; // Now invalid!
-      assert.strictEqual(ValidationState.hasPending(), true);
+      assert.strictEqual(getDefaultContext().hasPending(), true);
 
       person.retirementAge = 75; // Fix it
-      assert.strictEqual(ValidationState.hasPending(), false);
+      assert.strictEqual(getDefaultContext().hasPending(), false);
     });
   });
 
@@ -153,19 +153,19 @@ describe('Object-Level Validation Flow (Integration)', () => {
       });
 
       const person = Person({ age: 30, retirementAge: 25 }); // Invalid
-      assert.strictEqual(ValidationState.hasPending(), true);
+      assert.strictEqual(getDefaultContext().hasPending(), true);
 
       // Fix by changing age
       person.age = 20;
-      assert.strictEqual(ValidationState.hasPending(), false);
+      assert.strictEqual(getDefaultContext().hasPending(), false);
 
       // Break by changing retirementAge
       person.retirementAge = 15;
-      assert.strictEqual(ValidationState.hasPending(), true);
+      assert.strictEqual(getDefaultContext().hasPending(), true);
 
       // Fix by changing retirementAge
       person.retirementAge = 65;
-      assert.strictEqual(ValidationState.hasPending(), false);
+      assert.strictEqual(getDefaultContext().hasPending(), false);
     });
 
     it('handles validation with 3 properties', () => {
@@ -191,13 +191,13 @@ describe('Object-Level Validation Flow (Integration)', () => {
       });
 
       const triangle = Triangle({ a: 1, b: 1, c: 10 }); // Invalid!
-      assert.strictEqual(ValidationState.hasPending(), true);
+      assert.strictEqual(getDefaultContext().hasPending(), true);
 
       triangle.c = 1; // Now valid (equilateral)
-      assert.strictEqual(ValidationState.hasPending(), false);
+      assert.strictEqual(getDefaultContext().hasPending(), false);
 
       triangle.a = 100; // Invalid again
-      assert.strictEqual(ValidationState.hasPending(), true);
+      assert.strictEqual(getDefaultContext().hasPending(), true);
     });
   });
 
@@ -237,8 +237,8 @@ describe('Object-Level Validation Flow (Integration)', () => {
 
       const proj = Project({ startDate: 20250201, endDate: 20250101, budget: 1000, spent: 1500 });
 
-      assert.strictEqual(ValidationState.hasPending(), true);
-      const pending = ValidationState.getPending();
+      assert.strictEqual(getDefaultContext().hasPending(), true);
+      const pending = getDefaultContext().getPending();
       assert.strictEqual(pending[0].validations.length, 2);
       assert.ok(pending[0].validations.includes('date-range-valid'));
       assert.ok(pending[0].validations.includes('budget-not-exceeded'));
@@ -278,10 +278,10 @@ describe('Object-Level Validation Flow (Integration)', () => {
       });
 
       const proj = Project({ startDate: 20250201, endDate: 20250101, budget: 1000, spent: 1500 });
-      assert.strictEqual(ValidationState.getPending()[0].validations.length, 2);
+      assert.strictEqual(getDefaultContext().getPending()[0].validations.length, 2);
 
       proj.endDate = 20250301; // Fix date range
-      const pending = ValidationState.getPending();
+      const pending = getDefaultContext().getPending();
       assert.strictEqual(pending[0].validations.length, 1);
       assert.deepStrictEqual(pending[0].validations, ['budget-not-exceeded']);
     });
@@ -320,13 +320,13 @@ describe('Object-Level Validation Flow (Integration)', () => {
       });
 
       const proj = Project({ startDate: 20250201, endDate: 20250101, budget: 1000, spent: 1500 });
-      assert.strictEqual(ValidationState.hasPending(), true);
+      assert.strictEqual(getDefaultContext().hasPending(), true);
 
       proj.endDate = 20250301; // Fix dates
-      assert.strictEqual(ValidationState.hasPending(), true); // Budget still invalid
+      assert.strictEqual(getDefaultContext().hasPending(), true); // Budget still invalid
 
       proj.spent = 900; // Fix budget
-      assert.strictEqual(ValidationState.hasPending(), false); // All clear!
+      assert.strictEqual(getDefaultContext().hasPending(), false); // All clear!
     });
   });
 
@@ -360,7 +360,7 @@ describe('Object-Level Validation Flow (Integration)', () => {
       const person = Person({ grade: 'invalid', salary: 75000 }); // Will throw!
 
       // Exception treated as failure
-      assert.strictEqual(ValidationState.hasPending(), true);
+      assert.strictEqual(getDefaultContext().hasPending(), true);
     });
 
     it('recovers from exception when validation fixed', () => {
@@ -390,10 +390,10 @@ describe('Object-Level Validation Flow (Integration)', () => {
       });
 
       const person = Person({ grade: 'invalid', salary: 75000 });
-      assert.strictEqual(ValidationState.hasPending(), true);
+      assert.strictEqual(getDefaultContext().hasPending(), true);
 
       person.grade = 'senior'; // Now valid!
-      assert.strictEqual(ValidationState.hasPending(), false);
+      assert.strictEqual(getDefaultContext().hasPending(), false);
     });
   });
 
@@ -429,8 +429,8 @@ describe('Object-Level Validation Flow (Integration)', () => {
 
       const emp = Employee({ age: -5, empno: 100 }); // Inherited validation fails!
 
-      assert.strictEqual(ValidationState.hasPending(), true);
-      const pending = ValidationState.getPending();
+      assert.strictEqual(getDefaultContext().hasPending(), true);
+      const pending = getDefaultContext().getPending();
       assert.deepStrictEqual(pending[0].validations, ['age-positive']);
     });
 
@@ -477,8 +477,8 @@ describe('Object-Level Validation Flow (Integration)', () => {
 
       const emp = Employee({ age: -5, empno: 100, salary: -1000 }); // Both fail!
 
-      assert.strictEqual(ValidationState.hasPending(), true);
-      const pending = ValidationState.getPending();
+      assert.strictEqual(getDefaultContext().hasPending(), true);
+      const pending = getDefaultContext().getPending();
       assert.strictEqual(pending[0].validations.length, 2);
       assert.ok(pending[0].validations.includes('age-positive'));
       assert.ok(pending[0].validations.includes('salary-positive'));
@@ -514,10 +514,10 @@ describe('Object-Level Validation Flow (Integration)', () => {
       });
 
       const emp = Employee({ age: -5, empno: 100 });
-      assert.strictEqual(ValidationState.hasPending(), true);
+      assert.strictEqual(getDefaultContext().hasPending(), true);
 
       emp.age = 30; // Fix inherited validation
-      assert.strictEqual(ValidationState.hasPending(), false);
+      assert.strictEqual(getDefaultContext().hasPending(), false);
     });
   });
 
@@ -546,16 +546,16 @@ describe('Object-Level Validation Flow (Integration)', () => {
       const alice = Person({ age: 30, retirementAge: 25 }); // Invalid
       const bob = Person({ age: 40, retirementAge: 35 }); // Invalid
 
-      assert.strictEqual(ValidationState.hasPending(), true);
-      const pending = ValidationState.getPending();
+      assert.strictEqual(getDefaultContext().hasPending(), true);
+      const pending = getDefaultContext().getPending();
       assert.strictEqual(pending.length, 2);
 
       alice.retirementAge = 65; // Fix Alice
-      assert.strictEqual(ValidationState.getPending().length, 1);
-      assert.strictEqual(ValidationState.getPending()[0].obj, bob);
+      assert.strictEqual(getDefaultContext().getPending().length, 1);
+      assert.strictEqual(getDefaultContext().getPending()[0].obj, bob);
 
       bob.age = 30; // Fix Bob
-      assert.strictEqual(ValidationState.hasPending(), false);
+      assert.strictEqual(getDefaultContext().hasPending(), false);
     });
   });
 });
