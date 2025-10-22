@@ -131,22 +131,45 @@ export class BaseObjectType extends Type {
  *
  * Rules are declarative - they describe constraints without enforcing them.
  * Enforcement happens via Proxy traps (property-level) or explicit validate() calls (object-level).
+ *
+ * CRITICAL: Uses method signatures (not function properties) to enable
+ * the ES6 shorthand pattern for avoiding closure capture:
+ *
+ * @example
+ * const minSal = 85000;
+ * const rule = {
+ *   minSal,  // ES6 shorthand copies value (no closure!)
+ *   validate(value) {
+ *     return value >= this.minSal;  // Access via `this`
+ *   },
+ *   errorMessage(value, lang = 'en') {
+ *     const templates = {
+ *       'en': `Bad salary, must be above ${this.minSal}`,
+ *       'es': `Salario incorrecto, debe ser mayor a ${this.minSal}`
+ *     };
+ *     return templates[lang];
+ *   }
+ * };
  */
-export interface ValidationRule<T = unknown> {
+export interface ValidationRule {
   /**
-   * Validation predicate - returns true if valid, false otherwise
+   * Validation predicate - returns true if valid, false otherwise.
+   * Method (not property) to enable `this` references to captured values.
    */
-  rule: (value: T) => boolean;
+  validate(value: unknown): boolean;
 
   /**
-   * Error message to show when validation fails.
-   * Can be static string or function for context-aware messages.
+   * Error message generator with i18n support.
+   * Method (not property) to enable `this` references to captured values.
    *
-   * @example
-   * errorMessage: "Must be positive"
-   * errorMessage: (v) => `Expected positive, got ${v}`
+   * @param value - The value that failed validation
+   * @param lang - Language code (e.g., 'en', 'es', 'pt')
    */
-  errorMessage: string | ((value: T) => string);
+  errorMessage(value: unknown, lang: string): string;
+
+  // Additional properties can be added via ES6 shorthand to avoid closures
+  // e.g., minSal: 85000, maxSal: 250000
+  [key: string]: unknown;
 }
 
 /**
@@ -156,6 +179,103 @@ export class ValidationError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'ValidationError';
+  }
+}
+
+// =============================================================================
+// VALIDATION STRATEGY - Pluggable validation behavior
+// =============================================================================
+
+/**
+ * ValidationStrategy - Pluggable validation behavior
+ *
+ * The proxy delegates property validation to this strategy, which can be
+ * swapped at runtime.
+ */
+export interface ValidationStrategy {
+  /**
+   * Validate a single property assignment.
+   * Throws ValidationError if validation fails.
+   *
+   * Note: Property name is available in descriptor.name
+   */
+  validateProperty(
+    value: unknown,
+    descriptor: PropertyDescriptor
+  ): void;
+}
+
+/**
+ * ImmediateValidator - Default validation strategy.
+ * Validates immediately on every property assignment.
+ */
+export class ImmediateValidator implements ValidationStrategy {
+  constructor(private lang: string = 'en') {}
+
+  validateProperty(value: unknown, descriptor: PropertyDescriptor): void {
+    const validations = descriptor.validation?.validations;
+    if (!validations || validations.length === 0) return;
+
+    const errors: string[] = [];
+
+    for (const validation of validations) {
+      if (!validation.validate(value)) {
+        const msg = validation.errorMessage(value, this.lang);
+        errors.push(msg);
+      }
+    }
+
+    if (errors.length > 0) {
+      throw new ValidationError(`Property '${descriptor.name}': ${errors.join('; ')}`);
+    }
+  }
+}
+
+/**
+ * ValidationStrategy namespace - Companion object pattern (like Scala)
+ *
+ * Provides static state and operations for validation strategy management.
+ *
+ * ⚠️ WARNING: Strategy is GLOBAL mutable state
+ * - Affects ALL ObjectType instances across the entire application
+ * - Not thread-safe (JavaScript is single-threaded, but async contexts can interleave)
+ * - Switching strategies mid-operation can cause inconsistent behavior
+ *
+ * Use cases:
+ * - Application-wide validation mode (immediate vs deferred)
+ * - Testing (mock validator, collect errors without throwing)
+ * - Transactional contexts (save old strategy, restore after operation)
+ *
+ * For transactional usage:
+ * ```typescript
+ * const oldStrategy = ValidationStrategy.current();
+ * try {
+ *   ValidationStrategy.setCurrent(new DeferredValidator());
+ *   // ... perform operations with deferred validation
+ * } finally {
+ *   ValidationStrategy.setCurrent(oldStrategy);  // Always restore!
+ * }
+ * ```
+ */
+export namespace ValidationStrategy {
+  // Private state - not exported, truly encapsulated
+  let _current: ValidationStrategy = new ImmediateValidator();
+
+  /**
+   * Get the current validation strategy.
+   */
+  export function current(): ValidationStrategy {
+    return _current;
+  }
+
+  /**
+   * Set a new validation strategy.
+   *
+   * ⚠️ WARNING: This affects ALL validation globally!
+   * Consider saving the old strategy and restoring it when done.
+   */
+  export function setCurrent(strategy: ValidationStrategy): void {
+    _current = strategy;
   }
 }
 
@@ -319,12 +439,23 @@ export interface LifecycleMetadata {
  * Property Descriptor - Complete metadata for a property.
  *
  * Clean separation of concerns via nested namespaces:
+ * - name: Property identity (always present)
  * - type: Structural (always present)
  * - ui: Display/presentation (optional)
  * - validation: Integrity constraints (optional)
  * - lifecycle: Event hooks (optional, future)
  */
 export interface PropertyDescriptor {
+  /**
+   * The name of this property.
+   * Redundant with map key but makes descriptor self-contained.
+   *
+   * @example
+   * name: "salary"
+   * name: "deptno"
+   */
+  name: string;
+
   /**
    * The type of this property (required).
    * Can be primitive (NumberType, StringType) or object type (Dept, Emp).
@@ -354,6 +485,8 @@ export interface ObjectTypeSpec {
   name: string;
   properties?: Record<string, PropertyDescriptor>;
   prototype?: object | null;
+  supertype?: ObjectTypeFactory | null;  // Parent type for inheritance
+  validations?: ValidationRule[];  // Object-level validations
 }
 
 /**
@@ -368,10 +501,67 @@ export interface ObjectTypeFactory extends BaseObjectType {
   typeName: string;
   properties: Record<string, PropertyDescriptor>;
   prototype: object;
+  supertype?: ObjectTypeFactory | null;  // Parent type reference
+  validations?: ValidationRule[];  // Object-level validations
 
   // Type checking
   check(value: unknown): boolean;
 }
+
+// =============================================================================
+// INHERITANCE HELPERS - Property and validation collection
+// =============================================================================
+
+/**
+ * Recursively collect properties from supertype chain.
+ * Child properties override parent properties (error if conflict).
+ * Validates that descriptor.name matches map key.
+ */
+function collectProperties(
+  supertype: ObjectTypeFactory | null,
+  ownProperties: Record<string, PropertyDescriptor>
+): Record<string, PropertyDescriptor> {
+  // Validate name consistency for own properties
+  for (const [propName, descriptor] of Object.entries(ownProperties)) {
+    if (descriptor.name !== propName) {
+      throw new Error(
+        `Property name mismatch: map key '${propName}' != descriptor.name '${descriptor.name}'`
+      );
+    }
+  }
+
+  if (!supertype) return { ...ownProperties };
+
+  const baseProperties = supertype.properties;
+
+  // Check for overrides (prevent them)
+  for (const propName of Object.keys(ownProperties)) {
+    if (propName in baseProperties) {
+      throw new Error(`Cannot override base property '${propName}'`);
+    }
+  }
+
+  // Merge: base + own
+  return { ...baseProperties, ...ownProperties };
+}
+
+/**
+ * Recursively collect object-level validations from supertype chain.
+ * Validations accumulate (parent + child).
+ */
+function collectValidations(
+  supertype: ObjectTypeFactory | null,
+  ownValidations: ValidationRule[]
+): ValidationRule[] {
+  if (!supertype) return [...ownValidations];
+
+  const baseValidations = supertype.validations || [];
+  return [...baseValidations, ...ownValidations];
+}
+
+// =============================================================================
+// OBJECT TYPE - User-defined structured types
+// =============================================================================
 
 /**
  * ObjectType - Creates factory functions for user-defined structured object types.
@@ -379,47 +569,130 @@ export interface ObjectTypeFactory extends BaseObjectType {
  * This is for USER-DEFINED types (like Dept, Emp in the Scott schema).
  * Built-in JavaScript object types (Array, Map, Function, etc.) have their own classes below.
  *
- * @param spec - Type specification with name, properties, prototype
+ * @param spec - Type specification with name, properties, prototype, supertype, validations
  * @returns Factory function that creates instances
  */
 export function ObjectType(spec: ObjectTypeSpec): ObjectTypeFactory {
-  const { name, properties = {}, prototype = null } = spec;
+  const { name, properties = {}, prototype = null, supertype = null, validations = [] } = spec;
 
-  // The factory function - this IS the type (factory-as-type pattern)
+  // Collect all properties from inheritance chain
+  const allProperties = collectProperties(supertype, properties);
+
+  // Collect all object-level validations from inheritance chain
+  const allValidations = collectValidations(supertype, validations);
+
+  // The factory function - creates proxied instances
   const factory = function (props: Record<string, unknown> = {}): object {
-    // Create instance with proper prototype chain
-    const instance = Object.create(factory.prototype);
+    const target: Record<string, unknown> = {};
 
-    // Set properties from props
-    Object.keys(properties).forEach(propName => {
-      if (propName in props) {
-        instance[propName] = props[propName];
+    // Proxy handler with validation delegation
+    const handler: ProxyHandler<typeof target> = {
+      set(target, prop, value, receiver) {
+        if (typeof prop === 'symbol') {
+          return Reflect.set(target, prop, value, receiver);
+        }
+
+        const propName = String(prop);
+        const descriptor = allProperties[propName];
+
+        // 1. Schema enforcement
+        if (!descriptor) {
+          throw new Error(`Property '${propName}' not declared in schema for type ${name}`);
+        }
+
+        // 2. Enterable check
+        if (descriptor.validation?.enterable === false) {
+          throw new Error(`Property '${propName}' is not enterable`);
+        }
+
+        // 3. Updatable check
+        if (descriptor.validation?.updatable === false && target[propName] !== undefined) {
+          throw new Error(`Property '${propName}' is not updatable (already set)`);
+        }
+
+        // 4. Required check
+        if (value == null && descriptor.validation?.required) {
+          throw new Error(`Property '${propName}' is required (cannot be null/undefined)`);
+        }
+
+        // 5. Type validation (always immediate - structural check)
+        // Skip type check if value is null and property is optional
+        if (value != null && !descriptor.type.check(value)) {
+          throw new TypeError(
+            `Property '${propName}' expects type ${descriptor.type.typeName}, got ${typeof value}`
+          );
+        }
+
+        // 6. Delegate user validations to strategy
+        ValidationStrategy.current().validateProperty(value, descriptor);
+
+        // 7. Execute assignment
+        return Reflect.set(target, prop, value, receiver);
+      },
+
+      get(target, prop, receiver) {
+        if (typeof prop === 'symbol') {
+          return Reflect.get(target, prop, receiver);
+        }
+
+        const propName = String(prop);
+
+        // Check own properties first
+        if (propName in target) {
+          return Reflect.get(target, prop, receiver);
+        }
+
+        // Check schema properties (defined but not set)
+        if (propName in allProperties) {
+          return undefined;
+        }
+
+        // Check prototype methods
+        if (propName in factory.prototype) {
+          const value = (factory.prototype as any)[propName];
+          if (typeof value === 'function') {
+            return value.bind(receiver);
+          }
+          return value;
+        }
+
+        throw new Error(`Property '${propName}' not found on type ${name}`);
+      },
+
+      deleteProperty(target, prop) {
+        throw new Error(`Cannot delete property '${String(prop)}' from ${name}: schema is immutable`);
       }
-    });
+    };
 
-    // Mark instance with its type (for introspection and type checking)
-    Object.defineProperty(instance, '__type__', {
+    const proxy = new Proxy(target, handler);
+
+    // Initialize properties from props
+    for (const propName of Object.keys(props)) {
+      (proxy as any)[propName] = props[propName];
+    }
+
+    // Mark with __type__
+    Object.defineProperty(target, '__type__', {
       value: factory,
       writable: false,
       enumerable: false,
       configurable: false
     });
 
-    return instance;
+    return proxy;
   } as ObjectTypeFactory;
 
-  // Make the factory extend BaseObjectType
-  // We can't use .call() with ES6 classes, so we manually setup the inheritance
+  // Setup inheritance
   Object.setPrototypeOf(factory, BaseObjectType.prototype);
-
-  // Setup instance prototype chain
-  factory.prototype = prototype ? Object.create(prototype) : {};
+  factory.prototype = supertype ? Object.create(supertype.prototype) : {};
 
   // Attach metadata
   factory.typeName = name;
-  factory.properties = properties;
+  factory.properties = allProperties;
+  factory.supertype = supertype;
+  factory.validations = allValidations;
 
-  // Attach type checking method
+  // Type checking
   factory.check = function (value: unknown): boolean {
     return typeof value === 'object' && value !== null && (value as any).__type__ === factory;
   };

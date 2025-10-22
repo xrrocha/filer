@@ -1,14 +1,14 @@
 /**
- * Scott Schema Example - Clean Separation of Concerns
+ * Scott Schema Example - Validation Enforcement Demo
  *
- * Demonstrates PropertyDescriptor with nested namespaces:
- * - Layer 1: Structural types (type)
- * - Layer 2: UI metadata (ui.*)
- * - Layer 3: Validation metadata (validation.*)
+ * Demonstrates:
+ * - Property-level validation (immediate enforcement)
+ * - Type checking (always immediate)
+ * - Metadata-driven constraints (required, enterable, updatable)
+ * - Schema enforcement (no dynamic properties)
+ * - Collect-all error reporting
  *
- * Uses composable validators instead of ad-hoc shortcuts.
- *
- * NOTE: Validation is NOT enforced yet - this is pure declaration.
+ * NOTE: Must be .js (not .ts) for Navigator compatibility
  */
 
 import {
@@ -16,7 +16,8 @@ import {
   NumberType,
   StringType,
   DateTypeInstance,
-} from './javascript-types.js';
+  ValidationError,
+} from '../../dist/metadata/javascript-types.js';
 
 import {
   isInteger,
@@ -27,7 +28,7 @@ import {
   isValidDate,
   notFuture,
   instanceOf,
-} from './validators.js';
+} from '../../dist/metadata/validators.js';
 
 // =============================================================================
 // DEPARTMENT TYPE
@@ -37,6 +38,7 @@ const Dept = ObjectType({
   name: 'Dept',
   properties: {
     deptno: {
+      name: 'deptno',
       type: NumberType,
 
       ui: {
@@ -60,11 +62,12 @@ const Dept = ObjectType({
     },
 
     dname: {
+      name: 'dname',
       type: StringType,
 
       ui: {
         label: 'Department Name',
-        formatter: (v) => (v as string).toUpperCase(),
+        formatter: (v) => v.toUpperCase(),
         widget: 'text',
         placeholder: 'ACCOUNTING',
         helpText: 'Department name (uppercase, max 14 chars)',
@@ -83,11 +86,12 @@ const Dept = ObjectType({
     },
 
     loc: {
+      name: 'loc',
       type: StringType,
 
       ui: {
         label: 'Location',
-        formatter: (v) => (v as string).toUpperCase(),
+        formatter: (v) => v.toUpperCase(),
         widget: 'select',
         placeholder: 'NEW YORK',
         helpText: 'Department location (uppercase, max 13 chars)',
@@ -116,6 +120,7 @@ const Emp = ObjectType({
   name: 'Emp',
   properties: {
     empno: {
+      name: 'empno',
       type: NumberType,
 
       ui: {
@@ -139,11 +144,12 @@ const Emp = ObjectType({
     },
 
     ename: {
+      name: 'ename',
       type: StringType,
 
       ui: {
         label: 'Employee Name',
-        formatter: (v) => (v as string).toUpperCase(),
+        formatter: (v) => v.toUpperCase(),
         widget: 'text',
         placeholder: 'SMITH',
         helpText: 'Employee name (uppercase, max 10 chars)',
@@ -162,11 +168,12 @@ const Emp = ObjectType({
     },
 
     job: {
+      name: 'job',
       type: StringType,
 
       ui: {
         label: 'Job Title',
-        formatter: (v) => (v as string).toUpperCase(),
+        formatter: (v) => v.toUpperCase(),
         widget: 'select',
         placeholder: 'CLERK',
         helpText: 'Job title (uppercase, max 9 chars)',
@@ -186,11 +193,12 @@ const Emp = ObjectType({
     },
 
     hiredate: {
+      name: 'hiredate',
       type: DateTypeInstance,
 
       ui: {
         label: 'Hire Date',
-        formatter: (v) => (v as Date).toLocaleDateString(),
+        formatter: (v) => v.toLocaleDateString(),
         widget: 'date',
         helpText: 'Date employee was hired',
         order: 5,
@@ -208,11 +216,12 @@ const Emp = ObjectType({
     },
 
     sal: {
+      name: 'sal',
       type: NumberType,
 
       ui: {
         label: 'Salary',
-        formatter: (v) => `$${(v as number).toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+        formatter: (v) => `$${v.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
         widget: 'number',
         placeholder: '3000',
         helpText: 'Annual salary in USD',
@@ -225,18 +234,19 @@ const Emp = ObjectType({
         enterable: true,
         updatable: true,
         validations: [{
-          rule: (v) => (v as number) > 0,
-          errorMessage: (v) => `Salary must be positive, got ${v}`
+          validate(v) { return v > 0; },
+          errorMessage(v, lang = 'en') { return `Salary must be positive, got ${v}`; }
         }]
       }
     },
 
     comm: {
+      name: 'comm',
       type: NumberType,
 
       ui: {
         label: 'Commission',
-        formatter: (v) => v == null ? 'N/A' : `$${(v as number).toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
+        formatter: (v) => v == null ? 'N/A' : `$${v.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
         widget: 'number',
         placeholder: '0',
         helpText: 'Sales commission (optional)',
@@ -249,18 +259,19 @@ const Emp = ObjectType({
         enterable: true,
         updatable: true,
         validations: [{
-          rule: (v) => v == null || (v as number) >= 0,
-          errorMessage: (v) => `Commission must be non-negative or null, got ${v}`
+          validate(v) { return v == null || v >= 0; },
+          errorMessage(v, lang = 'en') { return `Commission must be non-negative or null, got ${v}`; }
         }]
       }
     },
 
     dept: {
+      name: 'dept',
       type: Dept,
 
       ui: {
         label: 'Department',
-        formatter: (v: any) => v?.dname || 'Unknown',
+        formatter: (v) => v?.dname || 'Unknown',
         widget: 'select',
         helpText: 'Employee\'s department',
         order: 4,
@@ -279,43 +290,127 @@ const Emp = ObjectType({
 });
 
 // =============================================================================
-// USAGE DEMONSTRATION (No enforcement yet - just declaration)
+// VALIDATION ENFORCEMENT TESTS
 // =============================================================================
 
-console.log('=== Scott Schema - Clean Separation of Concerns ===\n');
+console.log('=== Scott Schema - Validation Enforcement Demo ===\n');
 
-console.log('Dept type:', Dept.typeName);
-console.log('Dept properties:', Object.keys(Dept.properties));
+// Test 1: Successful instance creation
+console.log('Test 1: Create valid department');
+try {
+  const accounting = Dept({
+    deptno: 10,
+    dname: 'ACCOUNTING',
+    loc: 'NEW YORK'
+  });
+  console.log('✓ Department created:', accounting.dname);
+} catch (e) {
+  console.log('✗ Unexpected error:', e.message);
+}
 
-console.log('\nDept.deptno metadata:');
-console.log('  UI:');
-console.log('    - Label:', Dept.properties.deptno!.ui?.label);
-console.log('    - Widget:', Dept.properties.deptno!.ui?.widget);
-console.log('    - Formatter:', Dept.properties.deptno!.ui?.formatter?.(10));
-console.log('  Validation:');
-console.log('    - Required:', Dept.properties.deptno!.validation?.required);
-console.log('    - Updatable:', Dept.properties.deptno!.validation?.updatable);
-console.log('    - Validators:', Dept.properties.deptno!.validation?.validations?.length, 'rules');
+// Test 2: Range validation (immediate)
+console.log('\nTest 2: Range validation failure');
+try {
+  const invalidDept = Dept({
+    deptno: 5,  // Too low (< 10)
+    dname: 'TEST',
+    loc: 'BOSTON'
+  });
+  console.log('✗ Should have failed validation');
+} catch (e) {
+  console.log('✓ Caught validation error:', e.message);
+}
 
-console.log('\nEmp.sal metadata:');
-console.log('  UI:');
-console.log('    - Label:', Emp.properties.sal!.ui?.label);
-console.log('    - Formatter:', Emp.properties.sal!.ui?.formatter?.(3000));
-console.log('    - Widget:', Emp.properties.sal!.ui?.widget);
-console.log('    - CSS Class:', Emp.properties.sal!.ui?.cssClass);
-console.log('  Validation:');
-console.log('    - Required:', Emp.properties.sal!.validation?.required);
-console.log('    - Validators:', Emp.properties.sal!.validation?.validations?.length, 'rule');
+// Test 3: Type validation (always immediate)
+console.log('\nTest 3: Type validation failure');
+const validDept = Dept({ deptno: 20, dname: 'RESEARCH', loc: 'DALLAS' });
+try {
+  validDept.deptno = 'TWENTY';  // Wrong type
+  console.log('✗ Should have failed type check');
+} catch (e) {
+  console.log('✓ Caught type error:', e.message);
+}
 
-console.log('\nEmp.job metadata:');
-console.log('  UI:');
-console.log('    - Label:', Emp.properties.job!.ui?.label);
-console.log('    - Widget:', Emp.properties.job!.ui?.widget);
-console.log('  Validation:');
-console.log('    - Validators:', Emp.properties.job!.validation?.validations?.length, 'rules');
-console.log('    - Includes oneOf validator for job titles');
+// Test 4: Updatable constraint
+console.log('\nTest 4: Updatable constraint');
+try {
+  validDept.deptno = 25;  // Can't update primary key
+  console.log('✗ Should have failed updatable check');
+} catch (e) {
+  console.log('✓ Caught updatable error:', e.message);
+}
 
-console.log('\n=== Clean namespaces! No pollution! Composable validators! ===');
+// Test 5: Schema enforcement (no dynamic properties)
+console.log('\nTest 5: Schema enforcement');
+try {
+  validDept.budget = 100000;  // Not in schema
+  console.log('✗ Should have rejected undeclared property');
+} catch (e) {
+  console.log('✓ Caught schema error:', e.message);
+}
 
-// Export for use in other modules
-export { Dept, Emp };
+// Test 6: Collect-all validation (multiple errors)
+console.log('\nTest 6: Collect-all validation');
+try {
+  const badDept = Dept({
+    deptno: 30,
+    dname: 'sales',  // Should be uppercase
+    loc: 'san francisco'  // Should be uppercase AND not in oneOf list
+  });
+  console.log('✗ Should have failed multiple validations');
+} catch (e) {
+  console.log('✓ Caught multiple errors:', e.message);
+}
+
+// Test 7: Successful employee creation
+console.log('\nTest 7: Create valid employee');
+try {
+  const scott = Emp({
+    empno: 7788,
+    ename: 'SCOTT',
+    job: 'ANALYST',
+    hiredate: new Date('1987-04-19'),
+    sal: 3000,
+    comm: null,
+    dept: validDept
+  });
+  console.log('✓ Employee created:', scott.ename, '-', scott.job);
+  console.log('  Department:', scott.dept.dname);
+  console.log('  Salary:', scott.sal);
+} catch (e) {
+  console.log('✗ Unexpected error:', e.message);
+}
+
+// Test 8: Required vs optional properties
+console.log('\nTest 8: Required vs optional');
+try {
+  const sales = Dept({ deptno: 30, dname: 'SALES', loc: 'CHICAGO' });
+  const allen = Emp({
+    empno: 7499,
+    ename: 'ALLEN',
+    job: 'SALESMAN',
+    hiredate: new Date('1981-02-20'),
+    sal: 1600,
+    comm: 300,  // Commission is provided
+    dept: sales
+  });
+  console.log('✓ Employee with commission:', allen.ename, '- comm:', allen.comm);
+
+  // Commission can be null (optional)
+  allen.comm = null;
+  console.log('✓ Commission set to null (allowed)');
+
+  // But salary cannot be null (required)
+  try {
+    allen.sal = null;
+    console.log('✗ Should have failed required check');
+  } catch (e) {
+    console.log('✓ Required property cannot be null:', e.message);
+  }
+} catch (e) {
+  console.log('✗ Unexpected error:', e.message);
+}
+
+console.log('\n=== All Validation Tests Complete ===');
+console.log('Proxy delegates validation to pluggable strategy!');
+console.log('Validates immediately on every property assignment');

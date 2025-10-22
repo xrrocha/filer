@@ -38,8 +38,8 @@ import type { ValidationRule } from './javascript-types.js';
  * validations: [isInteger()]  // Rejects 3.14, accepts 42
  */
 export const isInteger = (): ValidationRule => ({
-  rule: (v) => Number.isInteger(v as number),
-  errorMessage: (v) => `Must be an integer, got ${v}`
+  validate(v) { return Number.isInteger(v as number); },
+  errorMessage(v, lang = 'en') { return `Must be an integer, got ${v}`; }
 });
 
 /**
@@ -49,8 +49,9 @@ export const isInteger = (): ValidationRule => ({
  * validations: [minInclusive(0)]  // Non-negative numbers
  */
 export const minInclusive = (min: number): ValidationRule => ({
-  rule: (v) => (v as number) >= min,
-  errorMessage: (v) => `Must be >= ${min}, got ${v}`
+  min,
+  validate(v) { return (v as number) >= (this as any).min; },
+  errorMessage(v, lang = 'en') { return `Must be >= ${(this as any).min}, got ${v}`; }
 });
 
 /**
@@ -60,8 +61,9 @@ export const minInclusive = (min: number): ValidationRule => ({
  * validations: [maxExclusive(100)]  // Less than 100
  */
 export const maxExclusive = (max: number): ValidationRule => ({
-  rule: (v) => (v as number) < max,
-  errorMessage: (v) => `Must be < ${max}, got ${v}`
+  max,
+  validate(v) { return (v as number) < (this as any).max; },
+  errorMessage(v, lang = 'en') { return `Must be < ${(this as any).max}, got ${v}`; }
 });
 
 /**
@@ -71,8 +73,9 @@ export const maxExclusive = (max: number): ValidationRule => ({
  * validations: [minExclusive(0)]  // Positive numbers
  */
 export const minExclusive = (min: number): ValidationRule => ({
-  rule: (v) => (v as number) > min,
-  errorMessage: (v) => `Must be > ${min}, got ${v}`
+  min,
+  validate(v) { return (v as number) > (this as any).min; },
+  errorMessage(v, lang = 'en') { return `Must be > ${(this as any).min}, got ${v}`; }
 });
 
 /**
@@ -82,8 +85,9 @@ export const minExclusive = (min: number): ValidationRule => ({
  * validations: [maxInclusive(9999)]  // At most 9999
  */
 export const maxInclusive = (max: number): ValidationRule => ({
-  rule: (v) => (v as number) <= max,
-  errorMessage: (v) => `Must be <= ${max}, got ${v}`
+  max,
+  validate(v) { return (v as number) <= (this as any).max; },
+  errorMessage(v, lang = 'en') { return `Must be <= ${(this as any).max}, got ${v}`; }
 });
 
 /**
@@ -134,8 +138,9 @@ export const rangeInclusive = (min: number, max: number): ValidationRule[] => [
  * validations: [pattern(/^\d{3}-\d{2}-\d{4}$/)]  // SSN format
  */
 export const pattern = (regex: RegExp): ValidationRule => ({
-  rule: (v) => regex.test(v as string),
-  errorMessage: (v) => `Must match ${regex}, got "${v}"`
+  regex,
+  validate(v) { return (this as any).regex.test(v as string); },
+  errorMessage(v, lang = 'en') { return `Must match ${(this as any).regex}, got "${v}"`; }
 });
 
 /**
@@ -145,8 +150,9 @@ export const pattern = (regex: RegExp): ValidationRule => ({
  * validations: [minLength(1)]  // Non-empty string
  */
 export const minLength = (min: number): ValidationRule => ({
-  rule: (v) => (v as string).length >= min,
-  errorMessage: (v) => `Minimum length ${min}, got ${(v as string).length}`
+  min,
+  validate(v) { return (v as string).length >= (this as any).min; },
+  errorMessage(v, lang = 'en') { return `Minimum length ${(this as any).min}, got ${(v as string).length}`; }
 });
 
 /**
@@ -156,8 +162,9 @@ export const minLength = (min: number): ValidationRule => ({
  * validations: [maxLength(14)]  // At most 14 characters
  */
 export const maxLength = (max: number): ValidationRule => ({
-  rule: (v) => (v as string).length <= max,
-  errorMessage: (v) => `Maximum length ${max}, got ${(v as string).length}`
+  max,
+  validate(v) { return (v as string).length <= (this as any).max; },
+  errorMessage(v, lang = 'en') { return `Maximum length ${(this as any).max}, got ${(v as string).length}`; }
 });
 
 /**
@@ -167,11 +174,13 @@ export const maxLength = (max: number): ValidationRule => ({
  * validations: [lengthRange(1, 14)]  // 1-14 characters
  */
 export const lengthRange = (min: number, max: number): ValidationRule => ({
-  rule: (v) => {
+  min,
+  max,
+  validate(v) {
     const len = (v as string).length;
-    return len >= min && len <= max;
+    return len >= (this as any).min && len <= (this as any).max;
   },
-  errorMessage: (v) => `Length must be ${min}-${max}, got ${(v as string).length}`
+  errorMessage(v, lang = 'en') { return `Length must be ${(this as any).min}-${(this as any).max}, got ${(v as string).length}`; }
 });
 
 /**
@@ -181,8 +190,8 @@ export const lengthRange = (min: number, max: number): ValidationRule => ({
  * validations: [uppercase()]  // "HELLO" passes, "Hello" fails
  */
 export const uppercase = (): ValidationRule => ({
-  rule: (v) => (v as string) === (v as string).toUpperCase(),
-  errorMessage: (v) => `Must be uppercase, got "${v}"`
+  validate(v) { return (v as string) === (v as string).toUpperCase(); },
+  errorMessage(v, lang = 'en') { return `Must be uppercase, got "${v}"`; }
 });
 
 /**
@@ -192,8 +201,8 @@ export const uppercase = (): ValidationRule => ({
  * validations: [lowercase()]  // "hello" passes, "Hello" fails
  */
 export const lowercase = (): ValidationRule => ({
-  rule: (v) => (v as string) === (v as string).toLowerCase(),
-  errorMessage: (v) => `Must be lowercase, got "${v}"`
+  validate(v) { return (v as string) === (v as string).toLowerCase(); },
+  errorMessage(v, lang = 'en') { return `Must be lowercase, got "${v}"`; }
 });
 
 /**
@@ -203,8 +212,8 @@ export const lowercase = (): ValidationRule => ({
  * validations: [notBlank()]  // "  " fails, " hello " passes
  */
 export const notBlank = (): ValidationRule => ({
-  rule: (v) => (v as string).trim().length > 0,
-  errorMessage: 'Must not be blank'
+  validate(v) { return (v as string).trim().length > 0; },
+  errorMessage(v, lang = 'en') { return 'Must not be blank'; }
 });
 
 // =============================================================================
@@ -220,8 +229,9 @@ export const notBlank = (): ValidationRule => ({
  * validations: [oneOf([10, 20, 30, 40])]
  */
 export const oneOf = <T>(values: T[]): ValidationRule => ({
-  rule: (v) => values.includes(v as T),
-  errorMessage: (v) => `Must be one of [${values.join(', ')}], got ${v}`
+  values,
+  validate(v) { return (this as any).values.includes(v as T); },
+  errorMessage(v, lang = 'en') { return `Must be one of [${(this as any).values.join(', ')}], got ${v}`; }
 });
 
 // =============================================================================
@@ -235,8 +245,8 @@ export const oneOf = <T>(values: T[]): ValidationRule => ({
  * validations: [isValidDate()]  // Rejects new Date('invalid')
  */
 export const isValidDate = (): ValidationRule => ({
-  rule: (v) => v instanceof Date && !isNaN((v as Date).getTime()),
-  errorMessage: (v) => `Must be a valid date, got ${v}`
+  validate(v) { return v instanceof Date && !isNaN((v as Date).getTime()); },
+  errorMessage(v, lang = 'en') { return `Must be a valid date, got ${v}`; }
 });
 
 /**
@@ -246,8 +256,8 @@ export const isValidDate = (): ValidationRule => ({
  * validations: [notFuture()]  // Hire date cannot be in future
  */
 export const notFuture = (): ValidationRule => ({
-  rule: (v) => (v as Date) <= new Date(),
-  errorMessage: (v) => `Date cannot be in the future: ${v}`
+  validate(v) { return (v as Date) <= new Date(); },
+  errorMessage(v, lang = 'en') { return `Date cannot be in the future: ${v}`; }
 });
 
 /**
@@ -257,8 +267,8 @@ export const notFuture = (): ValidationRule => ({
  * validations: [notPast()]  // Event date cannot be in past
  */
 export const notPast = (): ValidationRule => ({
-  rule: (v) => (v as Date) >= new Date(),
-  errorMessage: (v) => `Date cannot be in the past: ${v}`
+  validate(v) { return (v as Date) >= new Date(); },
+  errorMessage(v, lang = 'en') { return `Date cannot be in the past: ${v}`; }
 });
 
 /**
@@ -268,8 +278,9 @@ export const notPast = (): ValidationRule => ({
  * validations: [afterDate(new Date('2020-01-01'))]
  */
 export const afterDate = (minDate: Date): ValidationRule => ({
-  rule: (v) => (v as Date) > minDate,
-  errorMessage: (v) => `Date must be after ${minDate.toLocaleDateString()}, got ${(v as Date).toLocaleDateString()}`
+  minDate,
+  validate(v) { return (v as Date) > (this as any).minDate; },
+  errorMessage(v, lang = 'en') { return `Date must be after ${(this as any).minDate.toLocaleDateString()}, got ${(v as Date).toLocaleDateString()}`; }
 });
 
 /**
@@ -279,8 +290,9 @@ export const afterDate = (minDate: Date): ValidationRule => ({
  * validations: [beforeDate(new Date('2030-01-01'))]
  */
 export const beforeDate = (maxDate: Date): ValidationRule => ({
-  rule: (v) => (v as Date) < maxDate,
-  errorMessage: (v) => `Date must be before ${maxDate.toLocaleDateString()}, got ${(v as Date).toLocaleDateString()}`
+  maxDate,
+  validate(v) { return (v as Date) < (this as any).maxDate; },
+  errorMessage(v, lang = 'en') { return `Date must be before ${(this as any).maxDate.toLocaleDateString()}, got ${(v as Date).toLocaleDateString()}`; }
 });
 
 // =============================================================================
@@ -294,10 +306,11 @@ export const beforeDate = (maxDate: Date): ValidationRule => ({
  * validations: [instanceOf(Dept)]  // Value must be a Dept instance
  */
 export const instanceOf = (typeFactory: { typeName: string }): ValidationRule => ({
-  rule: (v) => {
-    return typeof v === 'object' && v !== null && (v as any).__type__ === typeFactory;
+  typeFactory,
+  validate(v) {
+    return typeof v === 'object' && v !== null && (v as any).__type__ === (this as any).typeFactory;
   },
-  errorMessage: (v) => `Must be an instance of ${typeFactory.typeName}, got ${typeof v}`
+  errorMessage(v, lang = 'en') { return `Must be an instance of ${(this as any).typeFactory.typeName}, got ${typeof v}`; }
 });
 
 // =============================================================================
@@ -312,13 +325,12 @@ export const instanceOf = (typeFactory: { typeName: string }): ValidationRule =>
  * validations: [and(minInclusive(0), maxInclusive(100), isInteger())]
  */
 export const and = (...validators: ValidationRule[]): ValidationRule => ({
-  rule: (v) => validators.every(validator => validator.rule(v)),
-  errorMessage: (v) => {
-    const failed = validators.find(validator => !validator.rule(v));
+  validators,
+  validate(v) { return (this as any).validators.every((val: ValidationRule) => val.validate(v)); },
+  errorMessage(v, lang = 'en') {
+    const failed = (this as any).validators.find((val: ValidationRule) => !val.validate(v));
     if (!failed) return 'Validation failed';
-    return typeof failed.errorMessage === 'function'
-      ? failed.errorMessage(v)
-      : failed.errorMessage;
+    return failed.errorMessage(v, lang);
   }
 });
 
@@ -330,8 +342,9 @@ export const and = (...validators: ValidationRule[]): ValidationRule => ({
  * validations: [or(pattern(/^[A-Z]+$/), pattern(/^[a-z]+$/))]  // All upper or all lower
  */
 export const or = (...validators: ValidationRule[]): ValidationRule => ({
-  rule: (v) => validators.some(validator => validator.rule(v)),
-  errorMessage: (v) => 'Must satisfy at least one condition'
+  validators,
+  validate(v) { return (this as any).validators.some((val: ValidationRule) => val.validate(v)); },
+  errorMessage(v, lang = 'en') { return 'Must satisfy at least one condition'; }
 });
 
 /**
@@ -341,10 +354,9 @@ export const or = (...validators: ValidationRule[]): ValidationRule => ({
  * validations: [not(oneOf(['admin', 'root']))]  // Cannot be admin or root
  */
 export const not = (validator: ValidationRule): ValidationRule => ({
-  rule: (v) => !validator.rule(v),
-  errorMessage: (v) => `Must NOT satisfy: ${
-    typeof validator.errorMessage === 'function'
-      ? validator.errorMessage(v)
-      : validator.errorMessage
-  }`
+  validator,
+  validate(v) { return !(this as any).validator.validate(v); },
+  errorMessage(v, lang = 'en') {
+    return `Must NOT satisfy: ${(this as any).validator.errorMessage(v, lang)}`;
+  }
 });
