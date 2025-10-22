@@ -1,16 +1,17 @@
-# Filer - Known Limitations & Workarounds
+# Filer - Recommended Patterns & Known Limitations
 
-This document describes current limitations in Filer and how to work around them.
+This document describes recommended patterns and current limitations in Filer.
 
-Filer is a research project exploring metadata-driven domain modeling. While we strive for quality and correctness, some edge cases and complex scenarios are deferred to maintain research momentum. This document helps you avoid common pitfalls.
+Filer is a research project exploring metadata-driven domain modeling. While we strive for quality and correctness, some edge cases and complex scenarios are deferred to maintain research momentum. This document helps you write code that works correctly with Filer's persistence system.
 
 ---
 
-## Closure Serialization in Validators
+## Writing Serializable Validators (Recommended Pattern)
 
-**Issue**: Validators and formatters that use closures with captured variables cannot be serialized.
+**Background**: Filer's metadata (validators, formatters) must be serializable to work with the event-sourced persistence system. Functions that capture external variables via closures don't serialize correctly.
 
-**Example of problem**:
+### ❌ Anti-Pattern: Closure Capture
+
 ```javascript
 const minSalary = 3000;
 const validator = {
@@ -19,24 +20,73 @@ const validator = {
 };
 ```
 
-**Consequence**: Schema appears to work but fails when you reload the page or export/import data.
+**Why it fails**: After page reload or export/import, the `rule` function is lost because closures can't be serialized to JSON.
 
-**Workaround**: Store captured values as object properties instead:
+### ✅ Recommended Pattern: Object Properties + `this`
+
+**Use ES6 shorthand properties to copy values into the validator object:**
 
 ```javascript
-// ✅ Use object properties
+const minSalary = 3000;
+const maxSalary = 25000;
+
 const validator = {
-  minSalary: 3000,  // Store as property
-  rule: function(v) { return v >= this.minSalary; },
-  errorMessage: function() { return `Must be >= ${this.minSalary}`; }
+  minSalary,  // ES6 shorthand copies value (minSalary: 3000)
+  maxSalary,  // No closure created!
+
+  rule(value) {
+    return value >= this.minSalary && value <= this.maxSalary;
+  },
+
+  errorMessage() {
+    return `Must be between ${this.minSalary} and ${this.maxSalary}`;
+  }
 };
 ```
 
-Or use the provided validator library which handles this correctly:
-```javascript
-import { minInclusive } from './validators.js';
+**Why it works**:
+- `{minSalary}` shorthand **copies the value** into the object (no closure)
+- Methods reference `this.minSalary` (binds to object property at runtime)
+- Filer serializes both the values AND the function source code
+- After deserialization, everything works correctly
 
-const validator = minInclusive(3000);  // ✅ Properly structured
+### Advanced: Multiple Languages
+
+Arrow functions inside methods are fine (they lexically capture `this` from the method scope):
+
+```javascript
+const minSal = 30000;
+const maxSal = 250000;
+
+const validator = {
+  minSal,
+  maxSal,
+
+  rule(value) {
+    return value >= this.minSal && value <= this.maxSal;
+  },
+
+  message(value, lang = 'en') {
+    const templates = {
+      'en': (v) => `salary (${v}) out of range [${this.minSal}, ${this.maxSal}]`,
+      'es': (v) => `salario (${v}) fuera de rango [${this.minSal}, ${this.maxSal}]`
+    };
+    return (templates[lang] || templates['en'])(value);
+  }
+};
+```
+
+### Using Validator Libraries
+
+You can also use the provided validator library which follows this pattern:
+
+```javascript
+import { minInclusive, maxInclusive } from './validators.js';
+
+const salValidator = {
+  ...minInclusive(3000),
+  ...maxInclusive(25000)
+};
 ```
 
 ---
