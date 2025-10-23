@@ -153,6 +153,86 @@ describe.skip('deserialize', () => {
       assert.equal(result.capacity, 10);
     });
 
+    it('deserializes literal RegExp', () => {
+      const json = JSON.stringify({
+        __type__: 'regexp',
+        source: 'test',
+        flags: 'gi',
+        lastIndex: 0,
+      });
+      const result = deserializeMemoryImage(json);
+
+      assert.ok(result instanceof RegExp);
+      assert.equal((result as RegExp).source, 'test');
+      assert.equal((result as RegExp).flags, 'gi');
+      assert.equal((result as RegExp).lastIndex, 0);
+    });
+
+    it('deserializes RegExp and verifies functionality', () => {
+      const json = JSON.stringify({
+        __type__: 'regexp',
+        source: 'test',
+        flags: 'i',
+        lastIndex: 0,
+      });
+      const result = deserializeMemoryImage(json) as RegExp;
+
+      assert.ok(result.test('TEST'));
+      assert.ok(result.test('test'));
+      assert.ok(!result.test('fail'));
+    });
+
+    it('deserializes RegExp with complex pattern', () => {
+      const json = JSON.stringify({
+        __type__: 'regexp',
+        source: '\\d+\\.\\w*',
+        flags: 'g',
+        lastIndex: 0,
+      });
+      const result = deserializeMemoryImage(json) as RegExp;
+
+      assert.ok(result instanceof RegExp);
+      assert.equal(result.source, '\\d+\\.\\w*');
+      assert.ok(result.test('123.abc'));
+    });
+
+    it('deserializes RegExp with non-zero lastIndex', () => {
+      const json = JSON.stringify({
+        __type__: 'regexp',
+        source: 'test',
+        flags: 'g',
+        lastIndex: 5,
+      });
+      const result = deserializeMemoryImage(json) as RegExp;
+
+      assert.equal(result.lastIndex, 5);
+    });
+
+    it('deserializes empty RegExp', () => {
+      const json = JSON.stringify({
+        __type__: 'regexp',
+        source: '(?:)',
+        flags: '',
+        lastIndex: 0,
+      });
+      const result = deserializeMemoryImage(json);
+
+      assert.ok(result instanceof RegExp);
+      assert.equal((result as RegExp).source, '(?:)');
+    });
+
+    it('deserializes RegExp with all flags', () => {
+      const json = JSON.stringify({
+        __type__: 'regexp',
+        source: 'test',
+        flags: 'gimsuy',
+        lastIndex: 0,
+      });
+      const result = deserializeMemoryImage(json) as RegExp;
+
+      assert.equal(result.flags, 'gimsuy');
+    });
+
     it('deserializes function', () => {
       const json = JSON.stringify({
         __type__: 'function',

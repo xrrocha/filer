@@ -85,6 +85,21 @@ const deserializeDate = (
 };
 
 /**
+ * Reconstruct a RegExp from source, flags, and lastIndex
+ */
+const deserializeRegExp = (obj: {
+  source: string;
+  flags: string;
+  lastIndex?: number
+}): RegExp => {
+  const regex = new RegExp(obj.source, obj.flags);
+  if (obj.lastIndex !== undefined) {
+    regex.lastIndex = obj.lastIndex;
+  }
+  return regex;
+};
+
+/**
  * Reconstruct a BigInt from string
  */
 const deserializeBigInt = (obj: { value: string }): bigint => {
@@ -172,6 +187,7 @@ const deserializers: Record<string, (obj: any, parsed: any) => any> = {
     };
     return deserializeDate(obj, simpleReconstruct, parsed);
   },
+  regexp: (obj) => deserializeRegExp(obj),
   bigint: (obj) => deserializeBigInt(obj),
   symbol: (obj) => deserializeSymbol(obj),
   ref: (obj) => ({ __unresolved_ref__: obj.path }) as UnresolvedRefMarker,
@@ -596,6 +612,11 @@ export const reconstructValue = (
           refs
         );
       }
+
+      case "regexp":
+        return deserializeRegExp(
+          typedValue as unknown as { source: string; flags: string; lastIndex?: number }
+        );
 
       case "bigint":
         return deserializeBigInt(typedValue as unknown as { value: string });

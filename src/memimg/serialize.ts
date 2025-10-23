@@ -225,6 +225,27 @@ function serializeValue(
       return serialized;
     }
 
+    case ValueCategory.REGEXP: {
+      // Unwrap proxy to get underlying target
+      const target = proxyToTarget.get(value as object) || value;
+
+      // Check for circular reference
+      const ref = cycleTracker.getReference(target as object);
+      if (ref) return ref;
+
+      // Mark as seen for cycle detection
+      cycleTracker.markSeen(target as object, path);
+
+      const regex = target as RegExp;
+
+      return {
+        [TYPE_MARKERS.TYPE]: "regexp",
+        source: regex.source,
+        flags: regex.flags,
+        lastIndex: regex.lastIndex
+      };
+    }
+
     case ValueCategory.FUNCTION: {
       const fn = value as { __type__?: string; sourceCode?: string };
       if (fn.__type__ === "function") {

@@ -32,6 +32,7 @@ export enum ValueCategory {
   BIGINT,
   SYMBOL,
   DATE,
+  REGEXP,
   FUNCTION,
   ARRAY,
   MAP,
@@ -152,6 +153,17 @@ export function classifyValue(value: unknown): TypeInfo {
   if (value instanceof Date) {
     return {
       category: ValueCategory.DATE,
+      isPrimitive: false,
+      isObject: true,
+      isCollection: false,
+      needsSpecialSerialization: true,
+    };
+  }
+
+  // RegExp (check before generic object)
+  if (value instanceof RegExp) {
+    return {
+      category: ValueCategory.REGEXP,
       isPrimitive: false,
       isObject: true,
       isCollection: false,

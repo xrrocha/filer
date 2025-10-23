@@ -73,6 +73,100 @@ describe('persistence integration', () => {
       assert.equal(restored.map.get('a'), 1);
       assert.equal(restored.set.has(1), true);
     });
+
+    it('persists RegExp patterns', () => {
+      const original = {
+        emailPattern: /^[\w.-]+@[\w.-]+\.\w+$/i,
+        urlPattern: /^https?:\/\/.+/,
+        numberPattern: /\d+/g
+      };
+      const root = createMemoryImage(original);
+
+      const json = serializeMemoryImageToJson(root);
+      const restored: any = deserializeMemoryImageFromJson(json);
+
+      // Verify RegExp instances are restored
+      assert.ok(restored.emailPattern instanceof RegExp);
+      assert.ok(restored.urlPattern instanceof RegExp);
+      assert.ok(restored.numberPattern instanceof RegExp);
+
+      // Verify patterns match
+      assert.equal(restored.emailPattern.source, original.emailPattern.source);
+      assert.equal(restored.urlPattern.source, original.urlPattern.source);
+      assert.equal(restored.numberPattern.source, original.numberPattern.source);
+
+      // Verify flags preserved
+      assert.equal(restored.emailPattern.flags, 'i');
+      assert.equal(restored.urlPattern.flags, '');
+      assert.equal(restored.numberPattern.flags, 'g');
+
+      // Verify functionality
+      assert.ok(restored.emailPattern.test('user@example.com'));
+      assert.ok(restored.urlPattern.test('https://example.com'));
+      assert.ok(restored.numberPattern.test('123'));
+    });
+
+    it('persists RegExp with state', () => {
+      const original = {
+        pattern: /test/g
+      };
+      original.pattern.lastIndex = 10;
+
+      const root = createMemoryImage(original);
+      const json = serializeMemoryImageToJson(root);
+      const restored: any = deserializeMemoryImageFromJson(json);
+
+      assert.ok(restored.pattern instanceof RegExp);
+      assert.equal(restored.pattern.lastIndex, 10);
+      assert.equal(restored.pattern.flags, 'g');
+    });
+
+    it('persists complex RegExp patterns', () => {
+      const original = {
+        patterns: [
+          /\d+\.\d+/,
+          /^[A-Z][a-z]+$/,
+          /\s+/g,
+          /(foo|bar|baz)/i
+        ]
+      };
+      const root = createMemoryImage(original);
+
+      const json = serializeMemoryImageToJson(root);
+      const restored: any = deserializeMemoryImageFromJson(json);
+
+      assert.equal(restored.patterns.length, 4);
+      restored.patterns.forEach((pattern: RegExp, i: number) => {
+        assert.ok(pattern instanceof RegExp);
+        assert.equal(pattern.source, original.patterns[i].source);
+        assert.equal(pattern.flags, original.patterns[i].flags);
+      });
+
+      // Verify functionality
+      assert.ok(restored.patterns[0].test('3.14'));
+      assert.ok(restored.patterns[1].test('Alice'));
+      assert.ok(restored.patterns[2].test('  '));
+      assert.ok(restored.patterns[3].test('FOO'));
+    });
+
+    it('persists RegExp in nested structures', () => {
+      const original = {
+        validators: {
+          email: /^[\w.-]+@[\w.-]+\.\w+$/,
+          phone: /^\d{3}-\d{3}-\d{4}$/,
+          zip: /^\d{5}(-\d{4})?$/
+        }
+      };
+      const root = createMemoryImage(original);
+
+      const json = serializeMemoryImageToJson(root);
+      const restored: any = deserializeMemoryImageFromJson(json);
+
+      assert.ok(restored.validators.email.test('test@example.com'));
+      assert.ok(restored.validators.phone.test('555-123-4567'));
+      assert.ok(restored.validators.zip.test('12345'));
+      assert.ok(restored.validators.zip.test('12345-6789'));
+    });
   });
 
   describe('Event log persistence', () => {

@@ -126,6 +126,73 @@ describe('serialize', () => {
       assert.equal(parsed.capacity, 10);
     });
 
+    it('serializes literal RegExp', () => {
+      const proxyToTarget = new WeakMap();
+      const value = /test/gi;
+      const json = serializeMemoryImage(value, proxyToTarget);
+      const parsed = JSON.parse(json);
+
+      assert.equal(parsed.__type__, 'regexp');
+      assert.equal(parsed.source, 'test');
+      assert.equal(parsed.flags, 'gi');
+      assert.equal(parsed.lastIndex, 0);
+    });
+
+    it('serializes constructor RegExp', () => {
+      const proxyToTarget = new WeakMap();
+      const value = new RegExp('\\d+', 'i');
+      const json = serializeMemoryImage(value, proxyToTarget);
+      const parsed = JSON.parse(json);
+
+      assert.equal(parsed.__type__, 'regexp');
+      assert.equal(parsed.source, '\\d+');
+      assert.equal(parsed.flags, 'i');
+      assert.equal(parsed.lastIndex, 0);
+    });
+
+    it('serializes RegExp with complex pattern', () => {
+      const proxyToTarget = new WeakMap();
+      const value = /\d+\.\w*/gi;
+      const json = serializeMemoryImage(value, proxyToTarget);
+      const parsed = JSON.parse(json);
+
+      assert.equal(parsed.__type__, 'regexp');
+      assert.equal(parsed.source, '\\d+\\.\\w*');
+      assert.equal(parsed.flags, 'gi');
+    });
+
+    it('serializes RegExp with all flags', () => {
+      const proxyToTarget = new WeakMap();
+      const value = /test/gimsuy;
+      const json = serializeMemoryImage(value, proxyToTarget);
+      const parsed = JSON.parse(json);
+
+      assert.equal(parsed.__type__, 'regexp');
+      assert.equal(parsed.flags, 'gimsuy');
+    });
+
+    it('serializes RegExp with non-zero lastIndex', () => {
+      const proxyToTarget = new WeakMap();
+      const value = /test/g;
+      value.lastIndex = 5;
+      const json = serializeMemoryImage(value, proxyToTarget);
+      const parsed = JSON.parse(json);
+
+      assert.equal(parsed.__type__, 'regexp');
+      assert.equal(parsed.lastIndex, 5);
+    });
+
+    it('serializes empty RegExp', () => {
+      const proxyToTarget = new WeakMap();
+      const value = new RegExp('');
+      const json = serializeMemoryImage(value, proxyToTarget);
+      const parsed = JSON.parse(json);
+
+      assert.equal(parsed.__type__, 'regexp');
+      assert.equal(parsed.source, '(?:)');
+      assert.equal(parsed.flags, '');
+    });
+
     it('serializes function with __type__', () => {
       const proxyToTarget = new WeakMap();
       const fn: any = () => {};

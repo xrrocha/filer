@@ -153,6 +153,46 @@ describe('type-classifier', () => {
       });
     });
 
+    describe('REGEXP category', () => {
+      it('classifies literal RegExp correctly', () => {
+        const result = classifyValue(/test/);
+        assert.equal(result.category, ValueCategory.REGEXP);
+        assert.equal(result.isPrimitive, false);
+        assert.equal(result.isObject, true);
+        assert.equal(result.isCollection, false);
+        assert.equal(result.needsSpecialSerialization, true);
+      });
+
+      it('classifies constructor RegExp correctly', () => {
+        const result = classifyValue(new RegExp('test'));
+        assert.equal(result.category, ValueCategory.REGEXP);
+        assert.equal(result.isPrimitive, false);
+        assert.equal(result.isObject, true);
+        assert.equal(result.isCollection, false);
+        assert.equal(result.needsSpecialSerialization, true);
+      });
+
+      it('classifies RegExp with flags', () => {
+        const result = classifyValue(/test/gi);
+        assert.equal(result.category, ValueCategory.REGEXP);
+      });
+
+      it('classifies RegExp with all flags', () => {
+        const result = classifyValue(/test/gimsuy);
+        assert.equal(result.category, ValueCategory.REGEXP);
+      });
+
+      it('classifies empty RegExp', () => {
+        const result = classifyValue(new RegExp(''));
+        assert.equal(result.category, ValueCategory.REGEXP);
+      });
+
+      it('classifies complex RegExp pattern', () => {
+        const result = classifyValue(/\d+\.\w*/gi);
+        assert.equal(result.category, ValueCategory.REGEXP);
+      });
+    });
+
     describe('FUNCTION category', () => {
       it('classifies function correctly', () => {
         const result = classifyValue(() => {});
