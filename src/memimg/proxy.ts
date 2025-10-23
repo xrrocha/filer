@@ -61,7 +61,8 @@
  * SPECIAL CASES:
  *
  * - **Functions**: Proxied with metadata attached for serialization
- * - **Dates**: NOT proxied (immutable, treated as primitive)
+ * - **Dates**: Proxied with methods bound to target (timestamp mutations tracked)
+ * - **RegExp**: Proxied with methods bound to target (lastIndex mutations tracked)
  * - **Maps/Sets**: Proxied + methods wrapped for mutation tracking
  * - **Arrays**: Proxied + mutating methods (push, pop, etc.) wrapped
  * - **Primitives**: Pass through unwrapped (immutable)
@@ -409,6 +410,35 @@ const createProxyHandler = (
       // Symbol.toPrimitive - used for type coercion
       if (property === Symbol.toPrimitive) {
         return (target as Date)[Symbol.toPrimitive].bind(target);
+      }
+    }
+
+    // Special handling for RegExp objects
+    // RegExp methods need to be bound to the target to access internal state
+    if (target instanceof RegExp) {
+      // List of RegExp methods that operate on the internal pattern/state
+      const regexpMethods = [
+        // Test/match methods
+        'test', 'exec',
+        // Conversion methods
+        'toString',
+        // Symbol methods
+        Symbol.match, Symbol.matchAll, Symbol.replace, Symbol.search, Symbol.split
+      ];
+
+      if (regexpMethods.includes(property as string | symbol)) {
+        const val = value;
+        if (typeof val === 'function') {
+          // Bind method to target, not proxy
+          // This ensures RegExp methods operate on the internal pattern state
+          return val.bind(target);
+        }
+        return val;
+      }
+
+      // Symbol.toPrimitive - used for type coercion
+      if (property === Symbol.toPrimitive) {
+        return (target as RegExp)[Symbol.toPrimitive]?.bind(target);
       }
     }
 

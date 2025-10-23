@@ -169,6 +169,138 @@ describe('persistence integration', () => {
     });
   });
 
+  describe('RegExp mutation tracking', () => {
+    it('tracks lastIndex mutations via events', async () => {
+      const eventLog = createMockEventLog();
+      const root: any = createMemoryImage({ pattern: /test/g }, { eventLog });
+
+      // Mutate lastIndex
+      root.pattern.lastIndex = 10;
+
+      // Verify event was logged
+      assert.equal(eventLog.events.length, 1);
+      assert.equal(eventLog.events[0].type, 'SET');
+      assert.deepEqual(eventLog.events[0].path, ['pattern', 'lastIndex']);
+      assert.equal(eventLog.events[0].value, 10);
+    });
+
+    it('replays lastIndex mutations correctly', async () => {
+      const eventLog = createMockEventLog();
+      const root: any = createMemoryImage({ pattern: /test/g }, { eventLog });
+
+      // Mutate lastIndex multiple times
+      root.pattern.lastIndex = 5;
+      root.pattern.lastIndex = 10;
+      root.pattern.lastIndex = 15;
+
+      // Replay from events
+      const replayed: any = {};
+      await replayFromEventLog(replayed, eventLog, { isReplaying: true });
+
+      // Verify lastIndex was restored
+      assert.ok(replayed.pattern instanceof RegExp);
+      assert.equal(replayed.pattern.lastIndex, 15);
+      assert.equal(replayed.pattern.source, 'test');
+      assert.equal(replayed.pattern.flags, 'g');
+    });
+
+    it('preserves RegExp functionality after mutation tracking', async () => {
+      const eventLog = createMockEventLog();
+      const root: any = createMemoryImage({ pattern: /\d+/g }, { eventLog });
+
+      // Use the RegExp
+      assert.ok(root.pattern.test('123'));
+      assert.ok(root.pattern.test('456'));
+
+      // Mutate lastIndex
+      root.pattern.lastIndex = 0;  // Reset
+
+      // Use again
+      assert.ok(root.pattern.test('789'));
+
+      // Replay
+      const replayed: any = {};
+      await replayFromEventLog(replayed, eventLog, { isReplaying: true });
+
+      // Verify functionality preserved
+      assert.ok(replayed.pattern.test('999'));
+    });
+
+    it('tracks multiple RegExp objects independently', async () => {
+      const eventLog = createMockEventLog();
+      const root: any = createMemoryImage({
+        email: /^[\w.-]+@/g,
+        phone: /^\d{3}-/g
+      }, { eventLog });
+
+      // Mutate both
+      root.email.lastIndex = 5;
+      root.phone.lastIndex = 3;
+
+      // Verify both tracked
+      assert.equal(eventLog.events.length, 2);
+      assert.deepEqual(eventLog.events[0].path, ['email', 'lastIndex']);
+      assert.equal(eventLog.events[0].value, 5);
+      assert.deepEqual(eventLog.events[1].path, ['phone', 'lastIndex']);
+      assert.equal(eventLog.events[1].value, 3);
+
+      // Replay
+      const replayed: any = {};
+      await replayFromEventLog(replayed, eventLog, { isReplaying: true });
+
+      // Verify both restored
+      assert.equal(replayed.email.lastIndex, 5);
+      assert.equal(replayed.phone.lastIndex, 3);
+    });
+
+    it('handles RegExp in arrays with mutation tracking', async () => {
+      const eventLog = createMockEventLog();
+      const root: any = createMemoryImage({
+        patterns: [/foo/g, /bar/g, /baz/g]
+      }, { eventLog });
+
+      // Mutate lastIndex on array element
+      root.patterns[1].lastIndex = 7;
+
+      // Verify event
+      assert.equal(eventLog.events.length, 1);
+      assert.deepEqual(eventLog.events[0].path, ['patterns', '1', 'lastIndex']);
+      assert.equal(eventLog.events[0].value, 7);
+
+      // Replay
+      const replayed: any = {};
+      await replayFromEventLog(replayed, eventLog, { isReplaying: true });
+
+      // Verify
+      assert.equal(replayed.patterns[1].lastIndex, 7);
+      assert.equal(replayed.patterns[0].lastIndex, 0);
+      assert.equal(replayed.patterns[2].lastIndex, 0);
+    });
+
+    it('end-to-end: create, mutate, snapshot, restore', () => {
+      // Create with RegExp
+      const root1: any = createMemoryImage({ pattern: /test/g });
+
+      // Mutate
+      root1.pattern.lastIndex = 20;
+
+      // Snapshot
+      const json = serializeMemoryImageToJson(root1);
+
+      // Restore
+      const root2: any = deserializeMemoryImageFromJson(json);
+
+      // Verify complete state preserved
+      assert.ok(root2.pattern instanceof RegExp);
+      assert.equal(root2.pattern.source, 'test');
+      assert.equal(root2.pattern.flags, 'g');
+      assert.equal(root2.pattern.lastIndex, 20);
+
+      // Verify functionality
+      assert.ok(root2.pattern.test('testing'));
+    });
+  });
+
   describe('Event log persistence', () => {
     it('reconstructs state from event log', async () => {
       const eventLog = createMockEventLog();
