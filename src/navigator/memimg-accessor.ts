@@ -9,8 +9,8 @@
  * the infrastructure, Navigator provides the navigation logic.
  */
 
-import type { Path } from '../memimg/types.js';
-import { getMemoryImageInfrastructure } from '../memimg/memimg.js';
+import type { Path } from 'ireneo';
+import { getMemoryImageInfrastructure } from 'ireneo';
 
 /**
  * BFS traversal to find an object's path when infrastructure isn't available
@@ -92,10 +92,11 @@ export function getObjectPath(root: unknown, obj: unknown): Path | null {
     const { targetToPath, proxyToTarget } = infrastructure;
 
     // Check if obj is a proxy, if so get the target
-    const target = proxyToTarget.get(obj as object) || obj;
+    // TypeScript: Use type assertion to bypass branded types for WeakMap access
+    const target = proxyToTarget.get(obj as any) || obj;
 
     // Look up the path in the infrastructure
-    const path = targetToPath.get(target as object);
+    const path = targetToPath.get(target as any);
 
     // Return with 'root' prefix for Navigator's path convention
     if (path) return ['root', ...path] as Path;

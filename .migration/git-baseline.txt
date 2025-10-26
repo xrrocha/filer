@@ -1,0 +1,5 @@
+426327c Improve Navigator layout and panel management
+b77aaea Upgraded typescript version
+309c437 Added clarifications
+8f4f604 Small revision to opening statement
+1e6866d docs: Expand README opening to emphasize human-centered personal applications

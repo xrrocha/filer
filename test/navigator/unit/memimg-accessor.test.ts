@@ -11,7 +11,7 @@ import {
   getObjectPath,
   isTrackedObject,
 } from '../../../dist/navigator/memimg-accessor.js';
-import { createMemoryImage } from '../../../dist/memimg/memimg.js';
+import { createMemoryImage } from 'ireneo';
 import { pathsEqual } from './fixtures/helpers.js';
 
 describe('Memimg Accessor', () => {

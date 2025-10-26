@@ -2,7 +2,7 @@
  * Shared test fixtures and data generators for Navigator unit tests
  */
 
-import type { MutablePath } from '../../../../src/memimg/types.js';
+import type { MutablePath } from 'ireneo';
 import type { MemoryImageMetadata } from '../../../../src/navigator/memimg-manager.js';
 import type { ScriptHistoryEntry } from '../../../../src/navigator/script-history.js';
 

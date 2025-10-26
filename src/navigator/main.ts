@@ -8,16 +8,12 @@ import '../app/assets/css/navigator.css';
 
 import {
   deserializeMemoryImageFromJson,
-} from "../memimg/memimg.js";
-import { serializeMemoryImage } from "../memimg/serialize.js";
-import {
+  serializeMemoryImageToJson,
   createIndexedDBEventLog,
-} from "../memimg/event-log.js";
-import type { EventLog } from "../memimg/types.js";
-import {
   createTransaction,
+  type EventLog,
   type Transaction,
-} from "../memimg/transaction.js";
+} from "ireneo";
 import { NavigationManager } from "./navigation.js";
 import { renderTree } from "./ui/tree.js";
 import { renderInspectorWithTabs } from "./ui/inspector.js";
@@ -109,12 +105,18 @@ const listContent = document.getElementById("memimg-list-content") as HTMLElemen
  * Helper function: serialize object with cycle handling
  */
 (window as any).viewAsJson = function (obj: any, pretty: boolean = true): any {
-  const serialized = JSON.parse(serializeMemoryImage(obj, new WeakMap()));
-  const json = pretty
-    ? JSON.stringify(serialized, null, 2)
-    : JSON.stringify(serialized);
-  console.log(json);
-  return serialized;
+  // Try to serialize as memory image first
+  try {
+    const json = serializeMemoryImageToJson(obj);
+    const serialized = JSON.parse(json);
+    console.log(pretty ? JSON.stringify(serialized, null, 2) : json);
+    return serialized;
+  } catch {
+    // Fallback to plain JSON.stringify for non-memimg objects
+    const json = JSON.stringify(obj, null, pretty ? 2 : 0);
+    console.log(json);
+    return JSON.parse(json);
+  }
 };
 
 /**
@@ -536,62 +538,8 @@ async function exportSnapshot(): Promise<void> {
   try {
     console.log("Exporting snapshot...");
 
-    // CRITICAL: Deep unwrap transaction proxies before serialization
-    // Transaction proxies wrap Date objects, causing toISOString() to fail
-    // We need to recursively unwrap everything to get plain JavaScript objects
-    const deepUnwrap = (obj: any, seen = new WeakSet()): any => {
-      // Primitives
-      if (obj === null || obj === undefined) return obj;
-      if (typeof obj !== 'object') return obj;
-
-      // Prevent infinite recursion on circular refs
-      if (seen.has(obj)) return obj;
-      seen.add(obj);
-
-      // Unwrap transaction proxy (one level)
-      const unwrapped = txn!.unwrap(obj);
-
-      // If it's a Date, return it (no need to recurse)
-      if (unwrapped instanceof Date) return unwrapped;
-
-      // If it's an Array, recursively unwrap elements
-      if (Array.isArray(unwrapped)) {
-        return unwrapped.map(item => deepUnwrap(item, seen));
-      }
-
-      // If it's a Map, recursively unwrap entries
-      if (unwrapped instanceof Map) {
-        const result = new Map();
-        unwrapped.forEach((value, key) => {
-          result.set(deepUnwrap(key, seen), deepUnwrap(value, seen));
-        });
-        return result;
-      }
-
-      // If it's a Set, recursively unwrap values
-      if (unwrapped instanceof Set) {
-        const result = new Set();
-        unwrapped.forEach(value => {
-          result.add(deepUnwrap(value, seen));
-        });
-        return result;
-      }
-
-      // Plain object - recursively unwrap properties
-      const result: any = {};
-      for (const key in unwrapped as Record<string, unknown>) {
-        if (Object.prototype.hasOwnProperty.call(unwrapped, key)) {
-          result[key] = deepUnwrap((unwrapped as any)[key], seen);
-        }
-      }
-      return result;
-    };
-
-    // Deep unwrap the entire transaction root to plain JavaScript objects
-    const unwrappedRoot = deepUnwrap(root);
-
-    // Serialize the unwrapped state
-    const stateJson = serializeMemoryImage(unwrappedRoot, new WeakMap());
+    // Serialize directly - ireneo handles unwrapping internally
+    const stateJson = serializeMemoryImageToJson(root);
     const state = JSON.parse(stateJson);
 
     // Create snapshot object with metadata
