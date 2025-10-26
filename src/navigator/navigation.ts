@@ -4,7 +4,7 @@
  * Properly encapsulated with private fields and clean API.
  */
 
-import type { MutablePath } from '../memimg/types.js';
+import type { MutablePath } from 'ireneo';
 
 /**
  * PathArray is an alias for MutablePath for backwards compatibility.

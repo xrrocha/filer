@@ -2,7 +2,7 @@
  * Editor - Code editor and execution environment
  */
 
-import type { Transaction } from '../../memimg/transaction.js';
+import type { Transaction } from 'ireneo';
 import { addScriptEntry } from '../script-history.js';
 import { CodeJar } from 'codejar';
 import Prism from 'prismjs';

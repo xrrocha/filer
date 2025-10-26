@@ -1,8 +1,6 @@
-import { createMemoryImage } from './src/memimg/memimg.js';
-import { createMockEventLog } from './test/memimg/fixtures/helpers.js';
-import { replayFromEventLog } from './src/memimg/replay.js';
+import { createMemoryImage, replayEventsToMemoryImage, createInMemoryEventLog } from 'ireneo';
 
-const eventLog = createMockEventLog();
+const eventLog = createInMemoryEventLog();
 const root = createMemoryImage({}, { eventLog });
 
 root.users = [];
@@ -31,7 +29,7 @@ eventLog.events.forEach((e, i) => {
 
 console.log('\n=== REPLAYING ===');
 const replayed = {};
-await replayFromEventLog(replayed, eventLog, { isReplaying: true });
+await replayEventsToMemoryImage(replayed, eventLog);
 
 console.log('\nResult:', JSON.stringify(replayed, null, 2));
 console.log('\nusers[0].age:', replayed.users[0].age, '(expected 31)');

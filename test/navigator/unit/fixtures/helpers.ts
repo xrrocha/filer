@@ -3,7 +3,7 @@
  */
 
 import { strict as assert } from 'node:assert';
-import type { Event, EventLog } from '../../../../src/memimg/types.js';
+import type { Event, EventLog } from 'ireneo';
 
 // ============================================================================
 // Mock Implementations

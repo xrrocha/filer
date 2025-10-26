@@ -1,0 +1,3290 @@
+
+> filer@0.1.0 test:all
+> npm run test:navigator && npm run test:metadata && npm run test:integration && npm run test:browser
+
+
+> filer@0.1.0 test:navigator
+> npm run test:navigator:unit
+
+
+> filer@0.1.0 test:navigator:unit
+> node --test test/navigator/unit/**/*.test.ts
+
+TAP version 13
+# Subtest: Collection Adapters
+    # Subtest: ArrayAdapter
+        # Subtest: getChildren
+            # Subtest: returns empty array for empty array
+            ok 1 - returns empty array for empty array
+              ---
+              duration_ms: 0.385917
+              type: 'test'
+              ...
+            # Subtest: returns indexed children for simple array
+            ok 2 - returns indexed children for simple array
+              ---
+              duration_ms: 0.078333
+              type: 'test'
+              ...
+            # Subtest: returns children for nested array
+            ok 3 - returns children for nested array
+              ---
+              duration_ms: 0.445292
+              type: 'test'
+              ...
+            # Subtest: returns children for object array
+            ok 4 - returns children for object array
+              ---
+              duration_ms: 0.072459
+              type: 'test'
+              ...
+            # Subtest: handles sparse arrays
+            ok 5 - handles sparse arrays
+              ---
+              duration_ms: 0.063083
+              type: 'test'
+              ...
+            # Subtest: handles arrays with mixed types
+            ok 6 - handles arrays with mixed types
+              ---
+              duration_ms: 0.156875
+              type: 'test'
+              ...
+            1..6
+        ok 1 - getChildren
+          ---
+          duration_ms: 1.677958
+          type: 'suite'
+          ...
+        # Subtest: createChildPath
+            # Subtest: creates numeric string path for array index
+            ok 1 - creates numeric string path for array index
+              ---
+              duration_ms: 0.164834
+              type: 'test'
+              ...
+            # Subtest: creates paths for multiple indices
+            ok 2 - creates paths for multiple indices
+              ---
+              duration_ms: 0.208125
+              type: 'test'
+              ...
+            # Subtest: preserves parent path
+            ok 3 - preserves parent path
+              ---
+              duration_ms: 0.536625
+              type: 'test'
+              ...
+            1..3
+        ok 2 - createChildPath
+          ---
+          duration_ms: 1.347291
+          type: 'suite'
+          ...
+        1..2
+    ok 1 - ArrayAdapter
+      ---
+      duration_ms: 3.2585
+      type: 'suite'
+      ...
+    # Subtest: MapAdapter
+        # Subtest: getChildren
+            # Subtest: returns empty array for empty map
+            ok 1 - returns empty array for empty map
+              ---
+              duration_ms: 0.507583
+              type: 'test'
+              ...
+            # Subtest: returns key-value children for simple map
+            ok 2 - returns key-value children for simple map
+              ---
+              duration_ms: 0.175083
+              type: 'test'
+              ...
+            # Subtest: returns children for nested map
+            ok 3 - returns children for nested map
+              ---
+              duration_ms: 0.174125
+              type: 'test'
+              ...
+            # Subtest: handles numeric keys
+            ok 4 - handles numeric keys
+              ---
+              duration_ms: 0.123958
+              type: 'test'
+              ...
+            # Subtest: handles object keys
+            ok 5 - handles object keys
+              ---
+              duration_ms: 0.14875
+              type: 'test'
+              ...
+            # Subtest: preserves insertion order
+            ok 6 - preserves insertion order
+              ---
+              duration_ms: 0.118541
+              type: 'test'
+              ...
+            1..6
+        ok 1 - getChildren
+          ---
+          duration_ms: 1.478625
+          type: 'suite'
+          ...
+        # Subtest: createChildPath
+            # Subtest: creates map:N path for map entry
+            ok 1 - creates map:N path for map entry
+              ---
+              duration_ms: 0.181584
+              type: 'test'
+              ...
+            # Subtest: creates paths for multiple indices
+            ok 2 - creates paths for multiple indices
+              ---
+              duration_ms: 0.113875
+              type: 'test'
+              ...
+            1..2
+        ok 2 - createChildPath
+          ---
+          duration_ms: 0.401917
+          type: 'suite'
+          ...
+        1..2
+    ok 2 - MapAdapter
+      ---
+      duration_ms: 2.082083
+      type: 'suite'
+      ...
+    # Subtest: SetAdapter
+        # Subtest: getChildren
+            # Subtest: returns empty array for empty set
+            ok 1 - returns empty array for empty set
+              ---
+              duration_ms: 0.255417
+              type: 'test'
+              ...
+            # Subtest: returns indexed children for simple set
+            ok 2 - returns indexed children for simple set
+              ---
+              duration_ms: 0.199417
+              type: 'test'
+              ...
+            # Subtest: returns children for object set
+            ok 3 - returns children for object set
+              ---
+              duration_ms: 0.814959
+              type: 'test'
+              ...
+            # Subtest: preserves insertion order
+            ok 4 - preserves insertion order
+              ---
+              duration_ms: 0.083167
+              type: 'test'
+              ...
+            # Subtest: handles mixed type set
+            ok 5 - handles mixed type set
+              ---
+              duration_ms: 0.05225
+              type: 'test'
+              ...
+            1..5
+        ok 1 - getChildren
+          ---
+          duration_ms: 1.619167
+          type: 'suite'
+          ...
+        # Subtest: createChildPath
+            # Subtest: creates set:N path for set entry
+            ok 1 - creates set:N path for set entry
+              ---
+              duration_ms: 0.067291
+              type: 'test'
+              ...
+            # Subtest: creates paths for multiple indices
+            ok 2 - creates paths for multiple indices
+              ---
+              duration_ms: 0.044708
+              type: 'test'
+              ...
+            1..2
+        ok 2 - createChildPath
+          ---
+          duration_ms: 0.152
+          type: 'suite'
+          ...
+        1..2
+    ok 3 - SetAdapter
+      ---
+      duration_ms: 1.934792
+      type: 'suite'
+      ...
+    # Subtest: getCollectionAdapter
+        # Subtest: returns ArrayAdapter for array
+        ok 1 - returns ArrayAdapter for array
+          ---
+          duration_ms: 0.067416
+          type: 'test'
+          ...
+        # Subtest: returns MapAdapter for Map
+        ok 2 - returns MapAdapter for Map
+          ---
+          duration_ms: 0.041542
+          type: 'test'
+          ...
+        # Subtest: returns SetAdapter for Set
+        ok 3 - returns SetAdapter for Set
+          ---
+          duration_ms: 0.036375
+          type: 'test'
+          ...
+        # Subtest: returns null for non-collection
+        ok 4 - returns null for non-collection
+          ---
+          duration_ms: 0.048583
+          type: 'test'
+          ...
+        # Subtest: returns null for Date (not a collection)
+        ok 5 - returns null for Date (not a collection)
+          ---
+          duration_ms: 0.032667
+          type: 'test'
+          ...
+        # Subtest: returns null for Function (not a collection)
+        ok 6 - returns null for Function (not a collection)
+          ---
+          duration_ms: 0.034167
+          type: 'test'
+          ...
+        1..6
+    ok 4 - getCollectionAdapter
+      ---
+      duration_ms: 0.333666
+      type: 'suite'
+      ...
+    # Subtest: isCollection
+        # Subtest: returns true for array
+        ok 1 - returns true for array
+          ---
+          duration_ms: 0.075
+          type: 'test'
+          ...
+        # Subtest: returns true for Map
+        ok 2 - returns true for Map
+          ---
+          duration_ms: 0.033042
+          type: 'test'
+          ...
+        # Subtest: returns true for Set
+        ok 3 - returns true for Set
+          ---
+          duration_ms: 0.032041
+          type: 'test'
+          ...
+        # Subtest: returns false for plain object
+        ok 4 - returns false for plain object
+          ---
+          duration_ms: 0.032208
+          type: 'test'
+          ...
+        # Subtest: returns false for primitives
+        ok 5 - returns false for primitives
+          ---
+          duration_ms: 0.035625
+          type: 'test'
+          ...
+        # Subtest: returns false for Date
+        ok 6 - returns false for Date
+          ---
+          duration_ms: 0.040583
+          type: 'test'
+          ...
+        # Subtest: returns false for Function
+        ok 7 - returns false for Function
+          ---
+          duration_ms: 0.030292
+          type: 'test'
+          ...
+        1..7
+    ok 5 - isCollection
+      ---
+      duration_ms: 0.346708
+      type: 'suite'
+      ...
+    # Subtest: edge cases
+        # Subtest: handles very large arrays
+        ok 1 - handles very large arrays
+          ---
+          duration_ms: 2.91025
+          type: 'test'
+          ...
+        # Subtest: handles very large maps
+        ok 2 - handles very large maps
+          ---
+          duration_ms: 10.963416
+          type: 'test'
+          ...
+        # Subtest: handles very large sets
+        ok 3 - handles very large sets
+          ---
+          duration_ms: 2.522792
+          type: 'test'
+          ...
+        # Subtest: handles arrays with undefined values
+        ok 4 - handles arrays with undefined values
+          ---
+          duration_ms: 0.083833
+          type: 'test'
+          ...
+        # Subtest: handles maps with undefined values
+        ok 5 - handles maps with undefined values
+          ---
+          duration_ms: 0.051542
+          type: 'test'
+          ...
+        # Subtest: handles sets with objects (identity)
+        ok 6 - handles sets with objects (identity)
+          ---
+          duration_ms: 0.047625
+          type: 'test'
+          ...
+        1..6
+    ok 6 - edge cases
+      ---
+      duration_ms: 16.718916
+      type: 'suite'
+      ...
+    1..6
+ok 1 - Collection Adapters
+  ---
+  duration_ms: 25.208166
+  type: 'suite'
+  ...
+# Subtest: formatters
+    # Subtest: NullFormatter
+        # Subtest: formats null as empty string in preview mode
+        ok 1 - formats null as empty string in preview mode
+          ---
+          duration_ms: 0.398541
+          type: 'test'
+          ...
+        # Subtest: formats null as empty string in full mode
+        ok 2 - formats null as empty string in full mode
+          ---
+          duration_ms: 0.067708
+          type: 'test'
+          ...
+        # Subtest: provides correct ValueInfo for null
+        ok 3 - provides correct ValueInfo for null
+          ---
+          duration_ms: 0.0755
+          type: 'test'
+          ...
+        1..3
+    ok 1 - NullFormatter
+      ---
+      duration_ms: 0.950834
+      type: 'suite'
+      ...
+    # Subtest: UndefinedFormatter
+        # Subtest: formats undefined as "undefined" in preview mode
+        ok 1 - formats undefined as "undefined" in preview mode
+          ---
+          duration_ms: 0.082708
+          type: 'test'
+          ...
+        # Subtest: formats undefined as "undefined" in full mode
+        ok 2 - formats undefined as "undefined" in full mode
+          ---
+          duration_ms: 0.057208
+          type: 'test'
+          ...
+        # Subtest: provides correct ValueInfo for undefined
+        ok 3 - provides correct ValueInfo for undefined
+          ---
+          duration_ms: 0.14825
+          type: 'test'
+          ...
+        1..3
+    ok 2 - UndefinedFormatter
+      ---
+      duration_ms: 0.428042
+      type: 'suite'
+      ...
+    # Subtest: StringFormatter
+        # Subtest: formats string without quotes in preview mode
+        ok 1 - formats string without quotes in preview mode
+          ---
+          duration_ms: 0.198542
+          type: 'test'
+          ...
+        # Subtest: formats string without quotes in full mode
+        ok 2 - formats string without quotes in full mode
+          ---
+          duration_ms: 0.060625
+          type: 'test'
+          ...
+        # Subtest: truncates long strings in preview mode
+        ok 3 - truncates long strings in preview mode
+          ---
+          duration_ms: 2.261458
+          type: 'test'
+          ...
+        # Subtest: does not truncate in full mode
+        ok 4 - does not truncate in full mode
+          ---
+          duration_ms: 0.505292
+          type: 'test'
+          ...
+        # Subtest: handles empty string
+        ok 5 - handles empty string
+          ---
+          duration_ms: 0.141208
+          type: 'test'
+          ...
+        # Subtest: handles special characters
+        ok 6 - handles special characters
+          ---
+          duration_ms: 0.113375
+          type: 'test'
+          ...
+        # Subtest: handles Unicode
+        ok 7 - handles Unicode
+          ---
+          duration_ms: 0.108166
+          type: 'test'
+          ...
+        # Subtest: provides correct ValueInfo for string
+        ok 8 - provides correct ValueInfo for string
+          ---
+          duration_ms: 0.132167
+          type: 'test'
+          ...
+        1..8
+    ok 3 - StringFormatter
+      ---
+      duration_ms: 3.887042
+      type: 'suite'
+      ...
+    # Subtest: NumberFormatter
+        # Subtest: formats integer
+        ok 1 - formats integer
+          ---
+          duration_ms: 0.262334
+          type: 'test'
+          ...
+        # Subtest: formats float
+        ok 2 - formats float
+          ---
+          duration_ms: 0.108167
+          type: 'test'
+          ...
+        # Subtest: formats zero
+        ok 3 - formats zero
+          ---
+          duration_ms: 0.097208
+          type: 'test'
+          ...
+        # Subtest: formats negative number
+        ok 4 - formats negative number
+          ---
+          duration_ms: 0.099458
+          type: 'test'
+          ...
+        # Subtest: formats Infinity
+        ok 5 - formats Infinity
+          ---
+          duration_ms: 0.099208
+          type: 'test'
+          ...
+        # Subtest: formats -Infinity
+        ok 6 - formats -Infinity
+          ---
+          duration_ms: 0.101334
+          type: 'test'
+          ...
+        # Subtest: formats NaN
+        ok 7 - formats NaN
+          ---
+          duration_ms: 0.101166
+          type: 'test'
+          ...
+        # Subtest: formats scientific notation
+        ok 8 - formats scientific notation
+          ---
+          duration_ms: 0.231417
+          type: 'test'
+          ...
+        # Subtest: provides correct ValueInfo for number
+        ok 9 - provides correct ValueInfo for number
+          ---
+          duration_ms: 0.140625
+          type: 'test'
+          ...
+        1..9
+    ok 4 - NumberFormatter
+      ---
+      duration_ms: 1.725125
+      type: 'suite'
+      ...
+    # Subtest: BooleanFormatter
+        # Subtest: formats true
+        ok 1 - formats true
+          ---
+          duration_ms: 0.237708
+          type: 'test'
+          ...
+        # Subtest: formats false
+        ok 2 - formats false
+          ---
+          duration_ms: 0.117333
+          type: 'test'
+          ...
+        # Subtest: provides correct ValueInfo for boolean
+        ok 3 - provides correct ValueInfo for boolean
+          ---
+          duration_ms: 0.148167
+          type: 'test'
+          ...
+        1..3
+    ok 5 - BooleanFormatter
+      ---
+      duration_ms: 0.665667
+      type: 'suite'
+      ...
+    # Subtest: BigIntFormatter
+        # Subtest: formats bigint with "n" suffix
+        ok 1 - formats bigint with "n" suffix
+          ---
+          duration_ms: 0.227125
+          type: 'test'
+          ...
+        # Subtest: formats zero bigint
+        ok 2 - formats zero bigint
+          ---
+          duration_ms: 0.329541
+          type: 'test'
+          ...
+        # Subtest: formats negative bigint
+        ok 3 - formats negative bigint
+          ---
+          duration_ms: 0.107542
+          type: 'test'
+          ...
+        # Subtest: provides correct ValueInfo for bigint
+        ok 4 - provides correct ValueInfo for bigint
+          ---
+          duration_ms: 0.134
+          type: 'test'
+          ...
+        1..4
+    ok 6 - BigIntFormatter
+      ---
+      duration_ms: 0.96125
+      type: 'suite'
+      ...
+    # Subtest: SymbolFormatter
+        # Subtest: formats anonymous symbol
+        ok 1 - formats anonymous symbol
+          ---
+          duration_ms: 0.214125
+          type: 'test'
+          ...
+        # Subtest: formats named symbol
+        ok 2 - formats named symbol
+          ---
+          duration_ms: 0.101958
+          type: 'test'
+          ...
+        # Subtest: formats global symbol
+        ok 3 - formats global symbol
+          ---
+          duration_ms: 0.107834
+          type: 'test'
+          ...
+        # Subtest: provides correct ValueInfo for symbol
+        ok 4 - provides correct ValueInfo for symbol
+          ---
+          duration_ms: 0.123416
+          type: 'test'
+          ...
+        1..4
+    ok 7 - SymbolFormatter
+      ---
+      duration_ms: 0.709
+      type: 'suite'
+      ...
+    # Subtest: DateFormatter
+        # Subtest: formats date as ISO string
+        ok 1 - formats date as ISO string
+          ---
+          duration_ms: 2.662709
+          type: 'test'
+          ...
+        # Subtest: formats current date
+        ok 2 - formats current date
+          ---
+          duration_ms: 0.173916
+          type: 'test'
+          ...
+        # Subtest: formats invalid date
+        ok 3 - formats invalid date
+          ---
+          duration_ms: 0.119334
+          type: 'test'
+          ...
+        # Subtest: provides correct ValueInfo for date
+        ok 4 - provides correct ValueInfo for date
+          ---
+          duration_ms: 0.159042
+          type: 'test'
+          ...
+        1..4
+    ok 8 - DateFormatter
+      ---
+      duration_ms: 3.317042
+      type: 'suite'
+      ...
+    # Subtest: FunctionFormatter
+        # Subtest: formats named function
+        ok 1 - formats named function
+          ---
+          duration_ms: 0.302875
+          type: 'test'
+          ...
+        # Subtest: formats anonymous function
+        ok 2 - formats anonymous function
+          ---
+          duration_ms: 0.130167
+          type: 'test'
+          ...
+        # Subtest: formats arrow function
+        ok 3 - formats arrow function
+          ---
+          duration_ms: 0.119084
+          type: 'test'
+          ...
+        # Subtest: formats class constructor
+        ok 4 - formats class constructor
+          ---
+          duration_ms: 0.118959
+          type: 'test'
+          ...
+        # Subtest: provides correct ValueInfo for function
+        ok 5 - provides correct ValueInfo for function
+          ---
+          duration_ms: 0.135833
+          type: 'test'
+          ...
+        1..5
+    ok 9 - FunctionFormatter
+      ---
+      duration_ms: 1.018167
+      type: 'suite'
+      ...
+    # Subtest: ArrayFormatter
+        # Subtest: formats empty array
+        ok 1 - formats empty array
+          ---
+          duration_ms: 0.366917
+          type: 'test'
+          ...
+        # Subtest: formats simple array
+        ok 2 - formats simple array
+          ---
+          duration_ms: 0.131875
+          type: 'test'
+          ...
+        # Subtest: formats array with mixed types
+        ok 3 - formats array with mixed types
+          ---
+          duration_ms: 0.115292
+          type: 'test'
+          ...
+        # Subtest: truncates long array in preview mode
+        ok 4 - truncates long array in preview mode
+          ---
+          duration_ms: 0.163792
+          type: 'test'
+          ...
+        # Subtest: formats nested arrays
+        ok 5 - formats nested arrays
+          ---
+          duration_ms: 0.116458
+          type: 'test'
+          ...
+        # Subtest: handles circular arrays with fallback
+        ok 6 - handles circular arrays with fallback
+          ---
+          duration_ms: 0.15875
+          type: 'test'
+          ...
+        # Subtest: formats array length in full mode
+        ok 7 - formats array length in full mode
+          ---
+          duration_ms: 0.146792
+          type: 'test'
+          ...
+        # Subtest: provides correct ValueInfo for array
+        ok 8 - provides correct ValueInfo for array
+          ---
+          duration_ms: 0.1515
+          type: 'test'
+          ...
+        1..8
+    ok 10 - ArrayFormatter
+      ---
+      duration_ms: 1.653208
+      type: 'suite'
+      ...
+    # Subtest: MapFormatter
+        # Subtest: formats empty map
+        ok 1 - formats empty map
+          ---
+          duration_ms: 0.258916
+          type: 'test'
+          ...
+        # Subtest: formats map with size
+        ok 2 - formats map with size
+          ---
+          duration_ms: 0.133459
+          type: 'test'
+          ...
+        # Subtest: full mode shows same as preview
+        ok 3 - full mode shows same as preview
+          ---
+          duration_ms: 0.208833
+          type: 'test'
+          ...
+        # Subtest: provides correct ValueInfo for map
+        ok 4 - provides correct ValueInfo for map
+          ---
+          duration_ms: 0.140417
+          type: 'test'
+          ...
+        1..4
+    ok 11 - MapFormatter
+      ---
+      duration_ms: 0.909584
+      type: 'suite'
+      ...
+    # Subtest: SetFormatter
+        # Subtest: formats empty set
+        ok 1 - formats empty set
+          ---
+          duration_ms: 0.231667
+          type: 'test'
+          ...
+        # Subtest: formats set with size
+        ok 2 - formats set with size
+          ---
+          duration_ms: 0.122625
+          type: 'test'
+          ...
+        # Subtest: full mode shows same as preview
+        ok 3 - full mode shows same as preview
+          ---
+          duration_ms: 0.135917
+          type: 'test'
+          ...
+        # Subtest: provides correct ValueInfo for set
+        ok 4 - provides correct ValueInfo for set
+          ---
+          duration_ms: 0.143917
+          type: 'test'
+          ...
+        1..4
+    ok 12 - SetFormatter
+      ---
+      duration_ms: 0.803417
+      type: 'suite'
+      ...
+    # Subtest: ObjectFormatter
+        # Subtest: formats empty object
+        ok 1 - formats empty object
+          ---
+          duration_ms: 0.577875
+          type: 'test'
+          ...
+        # Subtest: uses inferLabel for objects with name property
+        ok 2 - uses inferLabel for objects with name property
+          ---
+          duration_ms: 0.36425
+          type: 'test'
+          ...
+        # Subtest: uses inferLabel for objects with description property
+        ok 3 - uses inferLabel for objects with description property
+          ---
+          duration_ms: 1.852208
+          type: 'test'
+          ...
+        # Subtest: falls back to property preview for objects without name/desc
+        ok 4 - falls back to property preview for objects without name/desc
+          ---
+          duration_ms: 0.131084
+          type: 'test'
+          ...
+        # Subtest: truncates long property previews
+        ok 5 - truncates long property previews
+          ---
+          duration_ms: 0.174959
+          type: 'test'
+          ...
+        # Subtest: filters out internal properties (__ prefix)
+        ok 6 - filters out internal properties (__ prefix)
+          ---
+          duration_ms: 0.064958
+          type: 'test'
+          ...
+        # Subtest: provides correct ValueInfo for object
+        ok 7 - provides correct ValueInfo for object
+          ---
+          duration_ms: 0.064625
+          type: 'test'
+          ...
+        1..7
+    ok 13 - ObjectFormatter
+      ---
+      duration_ms: 3.489334
+      type: 'suite'
+      ...
+    # Subtest: inferLabel
+        # Subtest: extracts name property
+        ok 1 - extracts name property
+          ---
+          duration_ms: 0.419917
+          type: 'test'
+          ...
+        # Subtest: extracts description property
+        ok 2 - extracts description property
+          ---
+          duration_ms: 0.12975
+          type: 'test'
+          ...
+        # Subtest: extracts both name and description
+        ok 3 - extracts both name and description
+          ---
+          duration_ms: 0.111834
+          type: 'test'
+          ...
+        # Subtest: extracts nested name object
+        ok 4 - extracts nested name object
+          ---
+          duration_ms: 0.119583
+          type: 'test'
+          ...
+        # Subtest: falls back to Object{n} for no matches
+        ok 5 - falls back to Object{n} for no matches
+          ---
+          duration_ms: 0.108958
+          type: 'test'
+          ...
+        # Subtest: handles null
+        ok 6 - handles null
+          ---
+          duration_ms: 0.094958
+          type: 'test'
+          ...
+        # Subtest: handles undefined
+        ok 7 - handles undefined
+          ---
+          duration_ms: 0.100959
+          type: 'test'
+          ...
+        # Subtest: handles primitives
+        ok 8 - handles primitives
+          ---
+          duration_ms: 0.108584
+          type: 'test'
+          ...
+        # Subtest: handles Date
+        ok 9 - handles Date
+          ---
+          duration_ms: 0.166292
+          type: 'test'
+          ...
+        # Subtest: handles Array
+        ok 10 - handles Array
+          ---
+          duration_ms: 0.111375
+          type: 'test'
+          ...
+        # Subtest: handles Map
+        ok 11 - handles Map
+          ---
+          duration_ms: 0.110958
+          type: 'test'
+          ...
+        # Subtest: handles Set
+        ok 12 - handles Set
+          ---
+          duration_ms: 0.107
+          type: 'test'
+          ...
+        # Subtest: ignores internal properties (__ prefix)
+        ok 13 - ignores internal properties (__ prefix)
+          ---
+          duration_ms: 0.119875
+          type: 'test'
+          ...
+        # Subtest: case-insensitive matching (NAME, Name, name)
+        ok 14 - case-insensitive matching (NAME, Name, name)
+          ---
+          duration_ms: 0.125292
+          type: 'test'
+          ...
+        # Subtest: matches desc and description
+        ok 15 - matches desc and description
+          ---
+          duration_ms: 0.115208
+          type: 'test'
+          ...
+        1..15
+    ok 14 - inferLabel
+      ---
+      duration_ms: 2.627125
+      type: 'suite'
+      ...
+    # Subtest: edge cases
+        # Subtest: handles very long strings without crashing
+        ok 1 - handles very long strings without crashing
+          ---
+          duration_ms: 0.556542
+          type: 'test'
+          ...
+        # Subtest: handles deeply nested objects
+        ok 2 - handles deeply nested objects
+          ---
+          duration_ms: 0.1975
+          type: 'test'
+          ...
+        # Subtest: handles objects with null prototype
+        ok 3 - handles objects with null prototype
+          ---
+          duration_ms: 0.126541
+          type: 'test'
+          ...
+        # Subtest: handles proxies
+        ok 4 - handles proxies
+          ---
+          duration_ms: 0.340041
+          type: 'test'
+          ...
+        1..4
+    ok 15 - edge cases
+      ---
+      duration_ms: 1.38125
+      type: 'suite'
+      ...
+    1..15
+ok 2 - formatters
+  ---
+  duration_ms: 28.490541
+  type: 'suite'
+  ...
+# Subtest: Memimg Accessor
+    # Subtest: getObjectPath - with memimg infrastructure
+        # Subtest: returns path for root object
+        ok 1 - returns path for root object
+          ---
+          duration_ms: 0.772875
+          type: 'test'
+          ...
+        # Subtest: returns path for top-level object
+        ok 2 - returns path for top-level object
+          ---
+          duration_ms: 0.224833
+          type: 'test'
+          ...
+        # Subtest: returns path for nested object
+        ok 3 - returns path for nested object
+          ---
+          duration_ms: 0.168416
+          type: 'test'
+          ...
+        # Subtest: returns path for settings object
+        ok 4 - returns path for settings object
+          ---
+          duration_ms: 0.212083
+          type: 'test'
+          ...
+        # Subtest: uses fast path with targetToPath WeakMap
+        ok 5 - uses fast path with targetToPath WeakMap
+          ---
+          duration_ms: 0.3165
+          type: 'test'
+          ...
+        # Subtest: handles multiple references to same object (canonical path)
+        ok 6 - handles multiple references to same object (canonical path)
+          ---
+          duration_ms: 0.11125
+          type: 'test'
+          ...
+        # Subtest: returns correct path after object is added dynamically
+        ok 7 - returns correct path after object is added dynamically
+          ---
+          duration_ms: 0.214208
+          type: 'test'
+          ...
+        # Subtest: handles proxy vs target resolution correctly
+        ok 8 - handles proxy vs target resolution correctly
+          ---
+          duration_ms: 0.075209
+          type: 'test'
+          ...
+        1..8
+    ok 1 - getObjectPath - with memimg infrastructure
+      ---
+      duration_ms: 2.678958
+      type: 'suite'
+      ...
+    # Subtest: getObjectPath - BFS fallback
+        # Subtest: falls back to BFS for plain objects without infrastructure
+        ok 1 - falls back to BFS for plain objects without infrastructure
+          ---
+          duration_ms: 0.249708
+          type: 'test'
+          ...
+        # Subtest: finds object in simple graph via BFS
+        ok 2 - finds object in simple graph via BFS
+          ---
+          duration_ms: 0.075792
+          type: 'test'
+          ...
+        # Subtest: finds nested object via BFS
+        ok 3 - finds nested object via BFS
+          ---
+          duration_ms: 0.05275
+          type: 'test'
+          ...
+        # Subtest: finds shortest path in graph with multiple paths
+        ok 4 - finds shortest path in graph with multiple paths
+          ---
+          duration_ms: 0.092167
+          type: 'test'
+          ...
+        # Subtest: handles circular references during BFS
+        ok 5 - handles circular references during BFS
+          ---
+          duration_ms: 0.050459
+          type: 'test'
+          ...
+        # Subtest: avoids infinite loops with circular graphs
+        ok 6 - avoids infinite loops with circular graphs
+          ---
+          duration_ms: 0.048084
+          type: 'test'
+          ...
+        # Subtest: returns null for object not in graph
+        ok 7 - returns null for object not in graph
+          ---
+          duration_ms: 0.056
+          type: 'test'
+          ...
+        # Subtest: skips internal properties (__ prefix) during BFS
+        ok 8 - skips internal properties (__ prefix) during BFS
+          ---
+          duration_ms: 0.04225
+          type: 'test'
+          ...
+        # Subtest: handles deep nesting (>10 levels)
+        ok 9 - handles deep nesting (>10 levels)
+          ---
+          duration_ms: 0.051166
+          type: 'test'
+          ...
+        # Subtest: handles large graphs efficiently
+        ok 10 - handles large graphs efficiently
+          ---
+          duration_ms: 0.138709
+          type: 'test'
+          ...
+        1..10
+    ok 2 - getObjectPath - BFS fallback
+      ---
+      duration_ms: 0.988916
+      type: 'suite'
+      ...
+    # Subtest: getObjectPath - collections
+        # Subtest: finds object in array
+        ok 1 - finds object in array
+          ---
+          duration_ms: 0.14225
+          type: 'test'
+          ...
+        # Subtest: finds object in nested array
+        ok 2 - finds object in nested array
+          ---
+          duration_ms: 0.050042
+          type: 'test'
+          ...
+        # Subtest: finds value in Map
+        ok 3 - finds value in Map
+          ---
+          duration_ms: 0.073208
+          type: 'test'
+          ...
+        # Subtest: finds value in Set
+        ok 4 - finds value in Set
+          ---
+          duration_ms: 0.063083
+          type: 'test'
+          ...
+        # Subtest: handles empty array
+        ok 5 - handles empty array
+          ---
+          duration_ms: 0.041208
+          type: 'test'
+          ...
+        # Subtest: handles empty Map
+        ok 6 - handles empty Map
+          ---
+          duration_ms: 0.041333
+          type: 'test'
+          ...
+        # Subtest: handles empty Set
+        ok 7 - handles empty Set
+          ---
+          duration_ms: 0.04025
+          type: 'test'
+          ...
+        # Subtest: finds object in mixed collections
+        ok 8 - finds object in mixed collections
+          ---
+          duration_ms: 0.05975
+          type: 'test'
+          ...
+        # Subtest: handles sparse arrays
+        ok 9 - handles sparse arrays
+          ---
+          duration_ms: 0.046167
+          type: 'test'
+          ...
+        # Subtest: handles array-like objects
+        ok 10 - handles array-like objects
+          ---
+          duration_ms: 0.043916
+          type: 'test'
+          ...
+        1..10
+    ok 3 - getObjectPath - collections
+      ---
+      duration_ms: 0.700792
+      type: 'suite'
+      ...
+    # Subtest: getObjectPath - edge cases
+        # Subtest: returns null for null input
+        ok 1 - returns null for null input
+          ---
+          duration_ms: 0.134458
+          type: 'test'
+          ...
+        # Subtest: returns null for undefined input
+        ok 2 - returns null for undefined input
+          ---
+          duration_ms: 0.091959
+          type: 'test'
+          ...
+        # Subtest: returns null for primitive values
+        ok 3 - returns null for primitive values
+          ---
+          duration_ms: 0.050125
+          type: 'test'
+          ...
+        # Subtest: handles Date objects
+        ok 4 - handles Date objects
+          ---
+          duration_ms: 0.046459
+          type: 'test'
+          ...
+        # Subtest: handles Function objects
+        ok 5 - handles Function objects
+          ---
+          duration_ms: 0.074792
+          type: 'test'
+          ...
+        # Subtest: handles RegExp objects
+        ok 6 - handles RegExp objects
+          ---
+          duration_ms: 0.045375
+          type: 'test'
+          ...
+        # Subtest: handles Error objects
+        ok 7 - handles Error objects
+          ---
+          duration_ms: 0.047917
+          type: 'test'
+          ...
+        # Subtest: handles objects with null prototype
+        ok 8 - handles objects with null prototype
+          ---
+          duration_ms: 0.041459
+          type: 'test'
+          ...
+        # Subtest: handles class instances
+        ok 9 - handles class instances
+          ---
+          duration_ms: 0.07325
+          type: 'test'
+          ...
+        # Subtest: handles Symbol-keyed properties gracefully
+        ok 10 - handles Symbol-keyed properties gracefully
+          ---
+          duration_ms: 0.044958
+          type: 'test'
+          ...
+        # Subtest: handles frozen objects
+        ok 11 - handles frozen objects
+          ---
+          duration_ms: 0.066542
+          type: 'test'
+          ...
+        # Subtest: handles sealed objects
+        ok 12 - handles sealed objects
+          ---
+          duration_ms: 0.040208
+          type: 'test'
+          ...
+        # Subtest: handles objects with getters
+        ok 13 - handles objects with getters
+          ---
+          duration_ms: 0.058042
+          type: 'test'
+          ...
+        # Subtest: handles WeakMap objects
+        ok 14 - handles WeakMap objects
+          ---
+          duration_ms: 0.03875
+          type: 'test'
+          ...
+        # Subtest: handles WeakSet objects
+        ok 15 - handles WeakSet objects
+          ---
+          duration_ms: 0.038084
+          type: 'test'
+          ...
+        1..15
+    ok 4 - getObjectPath - edge cases
+      ---
+      duration_ms: 1.037125
+      type: 'suite'
+      ...
+    # Subtest: isTrackedObject
+        # Subtest: returns true for tracked objects
+        ok 1 - returns true for tracked objects
+          ---
+          duration_ms: 0.120459
+          type: 'test'
+          ...
+        # Subtest: returns false for untracked objects
+        ok 2 - returns false for untracked objects
+          ---
+          duration_ms: 2.150834
+          type: 'test'
+          ...
+        # Subtest: returns false for null
+        ok 3 - returns false for null
+          ---
+          duration_ms: 0.075208
+          type: 'test'
+          ...
+        # Subtest: returns false for undefined
+        ok 4 - returns false for undefined
+          ---
+          duration_ms: 0.062
+          type: 'test'
+          ...
+        # Subtest: returns false for primitives
+        ok 5 - returns false for primitives
+          ---
+          duration_ms: 0.070542
+          type: 'test'
+          ...
+        # Subtest: works with dynamically added objects
+        ok 6 - works with dynamically added objects
+          ---
+          duration_ms: 0.064292
+          type: 'test'
+          ...
+        # Subtest: works with BFS fallback for plain objects
+        ok 7 - works with BFS fallback for plain objects
+          ---
+          duration_ms: 0.063667
+          type: 'test'
+          ...
+        1..7
+    ok 5 - isTrackedObject
+      ---
+      duration_ms: 2.698208
+      type: 'suite'
+      ...
+    1..5
+ok 3 - Memimg Accessor
+  ---
+  duration_ms: 8.584791
+  type: 'suite'
+  ...
+# Subtest: Memory Image Manager
+ok 4 - Memory Image Manager # SKIP
+  ---
+  duration_ms: 0.25725
+  type: 'suite'
+  ...
+# Subtest: NavigationManager
+    # Subtest: initialization
+        # Subtest: initializes with root path
+        ok 1 - initializes with root path
+          ---
+          duration_ms: 0.457916
+          type: 'test'
+          ...
+        # Subtest: initializes with empty history (only root)
+        ok 2 - initializes with empty history (only root)
+          ---
+          duration_ms: 0.247833
+          type: 'test'
+          ...
+        # Subtest: initializes with current index 0
+        ok 3 - initializes with current index 0
+          ---
+          duration_ms: 0.085541
+          type: 'test'
+          ...
+        # Subtest: initializes with root expanded
+        ok 4 - initializes with root expanded
+          ---
+          duration_ms: 0.209375
+          type: 'test'
+          ...
+        # Subtest: initializes with no other paths expanded
+        ok 5 - initializes with no other paths expanded
+          ---
+          duration_ms: 0.299292
+          type: 'test'
+          ...
+        # Subtest: initializes onNavigate callback as null
+        ok 6 - initializes onNavigate callback as null
+          ---
+          duration_ms: 0.1405
+          type: 'test'
+          ...
+        1..6
+    ok 1 - initialization
+      ---
+      duration_ms: 1.8565
+      type: 'suite'
+      ...
+    # Subtest: navigateTo
+        # Subtest: navigates to simple path
+        ok 1 - navigates to simple path
+          ---
+          duration_ms: 0.134709
+          type: 'test'
+          ...
+        # Subtest: navigates to nested path
+        ok 2 - navigates to nested path
+          ---
+          duration_ms: 0.193416
+          type: 'test'
+          ...
+        # Subtest: adds to history when addToHistory is true (default)
+        ok 3 - adds to history when addToHistory is true (default)
+          ---
+          duration_ms: 0.18
+          type: 'test'
+          ...
+        # Subtest: does not add to history when addToHistory is false
+        ok 4 - does not add to history when addToHistory is false
+          ---
+          duration_ms: 0.089833
+          type: 'test'
+          ...
+        # Subtest: truncates forward history when navigating
+        ok 5 - truncates forward history when navigating
+          ---
+          duration_ms: 0.07875
+          type: 'test'
+          ...
+        # Subtest: expands all ancestor paths
+        ok 6 - expands all ancestor paths
+          ---
+          duration_ms: 0.694542
+          type: 'test'
+          ...
+        # Subtest: creates copy of path array (immutability)
+        ok 7 - creates copy of path array (immutability)
+          ---
+          duration_ms: 0.079333
+          type: 'test'
+          ...
+        # Subtest: triggers onNavigate callback
+        ok 8 - triggers onNavigate callback
+          ---
+          duration_ms: 0.098292
+          type: 'test'
+          ...
+        # Subtest: does not trigger onNavigate if null
+        ok 9 - does not trigger onNavigate if null
+          ---
+          duration_ms: 0.053583
+          type: 'test'
+          ...
+        1..9
+    ok 2 - navigateTo
+      ---
+      duration_ms: 1.799916
+      type: 'suite'
+      ...
+    # Subtest: selectedPath
+        # Subtest: returns copy of internal path
+        ok 1 - returns copy of internal path
+          ---
+          duration_ms: 0.068041
+          type: 'test'
+          ...
+        # Subtest: reflects current navigation
+        ok 2 - reflects current navigation
+          ---
+          duration_ms: 0.131458
+          type: 'test'
+          ...
+        1..2
+    ok 3 - selectedPath
+      ---
+      duration_ms: 0.236875
+      type: 'suite'
+      ...
+    # Subtest: history
+        # Subtest: returns copy of internal history
+        ok 1 - returns copy of internal history
+          ---
+          duration_ms: 0.070667
+          type: 'test'
+          ...
+        # Subtest: builds history correctly
+        ok 2 - builds history correctly
+          ---
+          duration_ms: 0.062417
+          type: 'test'
+          ...
+        # Subtest: each path in history is a copy
+        ok 3 - each path in history is a copy
+          ---
+          duration_ms: 0.052792
+          type: 'test'
+          ...
+        1..3
+    ok 4 - history
+      ---
+      duration_ms: 0.225834
+      type: 'suite'
+      ...
+    # Subtest: goBack
+        # Subtest: moves back one step in history
+        ok 1 - moves back one step in history
+          ---
+          duration_ms: 0.107916
+          type: 'test'
+          ...
+        # Subtest: moves back multiple steps
+        ok 2 - moves back multiple steps
+          ---
+          duration_ms: 0.08125
+          type: 'test'
+          ...
+        # Subtest: moves back to root
+        ok 3 - moves back to root
+          ---
+          duration_ms: 0.074375
+          type: 'test'
+          ...
+        # Subtest: does nothing when already at start
+        ok 4 - does nothing when already at start
+          ---
+          duration_ms: 0.076209
+          type: 'test'
+          ...
+        # Subtest: updates current index
+        ok 5 - updates current index
+          ---
+          duration_ms: 0.071041
+          type: 'test'
+          ...
+        # Subtest: expands ancestors of new location
+        ok 6 - expands ancestors of new location
+          ---
+          duration_ms: 0.0895
+          type: 'test'
+          ...
+        # Subtest: triggers onNavigate callback
+        ok 7 - triggers onNavigate callback
+          ---
+          duration_ms: 0.079041
+          type: 'test'
+          ...
+        1..7
+    ok 5 - goBack
+      ---
+      duration_ms: 0.667917
+      type: 'suite'
+      ...
+    # Subtest: canGoBack
+        # Subtest: returns false at start
+        ok 1 - returns false at start
+          ---
+          duration_ms: 0.068375
+          type: 'test'
+          ...
+        # Subtest: returns true after navigation
+        ok 2 - returns true after navigation
+          ---
+          duration_ms: 0.053917
+          type: 'test'
+          ...
+        # Subtest: returns false after going back to start
+        ok 3 - returns false after going back to start
+          ---
+          duration_ms: 0.109708
+          type: 'test'
+          ...
+        1..3
+    ok 6 - canGoBack
+      ---
+      duration_ms: 0.273
+      type: 'suite'
+      ...
+    # Subtest: goForward
+        # Subtest: moves forward one step in history
+        ok 1 - moves forward one step in history
+          ---
+          duration_ms: 0.125625
+          type: 'test'
+          ...
+        # Subtest: moves forward multiple steps
+        ok 2 - moves forward multiple steps
+          ---
+          duration_ms: 0.077042
+          type: 'test'
+          ...
+        # Subtest: does nothing when already at end
+        ok 3 - does nothing when already at end
+          ---
+          duration_ms: 0.087584
+          type: 'test'
+          ...
+        # Subtest: updates current index
+        ok 4 - updates current index
+          ---
+          duration_ms: 0.079875
+          type: 'test'
+          ...
+        # Subtest: expands ancestors of new location
+        ok 5 - expands ancestors of new location
+          ---
+          duration_ms: 0.111167
+          type: 'test'
+          ...
+        # Subtest: triggers onNavigate callback
+        ok 6 - triggers onNavigate callback
+          ---
+          duration_ms: 0.096916
+          type: 'test'
+          ...
+        1..6
+    ok 7 - goForward
+      ---
+      duration_ms: 0.690208
+      type: 'suite'
+      ...
+    # Subtest: canGoForward
+        # Subtest: returns false when at end
+        ok 1 - returns false when at end
+          ---
+          duration_ms: 0.07
+          type: 'test'
+          ...
+        # Subtest: returns true after going back
+        ok 2 - returns true after going back
+          ---
+          duration_ms: 0.061416
+          type: 'test'
+          ...
+        # Subtest: returns false after navigating forward to end
+        ok 3 - returns false after navigating forward to end
+          ---
+          duration_ms: 0.053875
+          type: 'test'
+          ...
+        # Subtest: returns false after new navigation truncates forward history
+        ok 4 - returns false after new navigation truncates forward history
+          ---
+          duration_ms: 0.055125
+          type: 'test'
+          ...
+        1..4
+    ok 8 - canGoForward
+      ---
+      duration_ms: 0.289083
+      type: 'suite'
+      ...
+    # Subtest: toggleExpanded
+        # Subtest: expands collapsed path
+        ok 1 - expands collapsed path
+          ---
+          duration_ms: 0.082625
+          type: 'test'
+          ...
+        # Subtest: collapses expanded path
+        ok 2 - collapses expanded path
+          ---
+          duration_ms: 0.051334
+          type: 'test'
+          ...
+        # Subtest: handles multiple paths independently
+        ok 3 - handles multiple paths independently
+          ---
+          duration_ms: 0.050625
+          type: 'test'
+          ...
+        # Subtest: does not affect unrelated paths
+        ok 4 - does not affect unrelated paths
+          ---
+          duration_ms: 1.011083
+          type: 'test'
+          ...
+        1..4
+    ok 9 - toggleExpanded
+      ---
+      duration_ms: 1.262833
+      type: 'suite'
+      ...
+    # Subtest: isExpanded
+        # Subtest: returns false for non-expanded paths
+        ok 1 - returns false for non-expanded paths
+          ---
+          duration_ms: 0.099416
+          type: 'test'
+          ...
+        # Subtest: returns true for expanded paths
+        ok 2 - returns true for expanded paths
+          ---
+          duration_ms: 0.056208
+          type: 'test'
+          ...
+        # Subtest: returns true for root (initially expanded)
+        ok 3 - returns true for root (initially expanded)
+          ---
+          duration_ms: 0.049625
+          type: 'test'
+          ...
+        1..3
+    ok 10 - isExpanded
+      ---
+      duration_ms: 0.263375
+      type: 'suite'
+      ...
+    # Subtest: toggleNestedExpanded
+        # Subtest: expands collapsed nested object
+        ok 1 - expands collapsed nested object
+          ---
+          duration_ms: 0.087333
+          type: 'test'
+          ...
+        # Subtest: collapses expanded nested object
+        ok 2 - collapses expanded nested object
+          ---
+          duration_ms: 0.051041
+          type: 'test'
+          ...
+        # Subtest: handles multiple paths independently
+        ok 3 - handles multiple paths independently
+          ---
+          duration_ms: 0.050458
+          type: 'test'
+          ...
+        # Subtest: is independent from tree expansion
+        ok 4 - is independent from tree expansion
+          ---
+          duration_ms: 0.051209
+          type: 'test'
+          ...
+        1..4
+    ok 11 - toggleNestedExpanded
+      ---
+      duration_ms: 0.286667
+      type: 'suite'
+      ...
+    # Subtest: isNestedExpanded
+        # Subtest: returns false for non-expanded nested objects
+        ok 1 - returns false for non-expanded nested objects
+          ---
+          duration_ms: 0.087916
+          type: 'test'
+          ...
+        # Subtest: returns true for expanded nested objects
+        ok 2 - returns true for expanded nested objects
+          ---
+          duration_ms: 0.054917
+          type: 'test'
+          ...
+        # Subtest: returns false initially
+        ok 3 - returns false initially
+          ---
+          duration_ms: 0.058875
+          type: 'test'
+          ...
+        1..3
+    ok 12 - isNestedExpanded
+      ---
+      duration_ms: 0.239041
+      type: 'suite'
+      ...
+    # Subtest: reset
+        # Subtest: resets selected path to root
+        ok 1 - resets selected path to root
+          ---
+          duration_ms: 0.126
+          type: 'test'
+          ...
+        # Subtest: resets history to only root
+        ok 2 - resets history to only root
+          ---
+          duration_ms: 0.073333
+          type: 'test'
+          ...
+        # Subtest: resets current index to 0
+        ok 3 - resets current index to 0
+          ---
+          duration_ms: 0.0695
+          type: 'test'
+          ...
+        # Subtest: clears all expansion state (except root)
+        ok 4 - clears all expansion state (except root)
+          ---
+          duration_ms: 0.071666
+          type: 'test'
+          ...
+        # Subtest: clears all nested expansion state
+        ok 5 - clears all nested expansion state
+          ---
+          duration_ms: 0.0705
+          type: 'test'
+          ...
+        1..5
+    ok 13 - reset
+      ---
+      duration_ms: 0.465833
+      type: 'suite'
+      ...
+    # Subtest: onNavigate callback
+        # Subtest: is triggered by navigateTo
+        ok 1 - is triggered by navigateTo
+          ---
+          duration_ms: 0.090916
+          type: 'test'
+          ...
+        # Subtest: is triggered by goBack
+        ok 2 - is triggered by goBack
+          ---
+          duration_ms: 0.078917
+          type: 'test'
+          ...
+        # Subtest: is triggered by goForward
+        ok 3 - is triggered by goForward
+          ---
+          duration_ms: 0.051333
+          type: 'test'
+          ...
+        # Subtest: is triggered by toggleExpanded
+        ok 4 - is triggered by toggleExpanded
+          ---
+          duration_ms: 0.047041
+          type: 'test'
+          ...
+        # Subtest: can be set to null without errors
+        ok 5 - can be set to null without errors
+          ---
+          duration_ms: 0.048916
+          type: 'test'
+          ...
+        # Subtest: can be changed during navigation
+        ok 6 - can be changed during navigation
+          ---
+          duration_ms: 0.052292
+          type: 'test'
+          ...
+        1..6
+    ok 14 - onNavigate callback
+      ---
+      duration_ms: 0.429833
+      type: 'suite'
+      ...
+    # Subtest: edge cases
+        # Subtest: handles empty path array
+        ok 1 - handles empty path array
+          ---
+          duration_ms: 0.064875
+          type: 'test'
+          ...
+        # Subtest: handles very long paths
+        ok 2 - handles very long paths
+          ---
+          duration_ms: 0.244208
+          type: 'test'
+          ...
+        # Subtest: handles special characters in path segments
+        ok 3 - handles special characters in path segments
+          ---
+          duration_ms: 0.046375
+          type: 'test'
+          ...
+        # Subtest: handles rapid navigation
+        ok 4 - handles rapid navigation
+          ---
+          duration_ms: 0.124541
+          type: 'test'
+          ...
+        # Subtest: handles back/forward at boundaries
+        ok 5 - handles back/forward at boundaries
+          ---
+          duration_ms: 0.045834
+          type: 'test'
+          ...
+        1..5
+    ok 15 - edge cases
+      ---
+      duration_ms: 0.580416
+      type: 'suite'
+      ...
+    1..15
+ok 5 - NavigationManager
+  ---
+  duration_ms: 10.262541
+  type: 'suite'
+  ...
+# Subtest: Path Utils
+    # Subtest: traversePath
+        # Subtest: returns root for root path
+        ok 1 - returns root for root path
+          ---
+          duration_ms: 0.48625
+          type: 'test'
+          ...
+        # Subtest: traverses to simple property
+        ok 2 - traverses to simple property
+          ---
+          duration_ms: 0.084208
+          type: 'test'
+          ...
+        # Subtest: traverses to nested property
+        ok 3 - traverses to nested property
+          ---
+          duration_ms: 0.066375
+          type: 'test'
+          ...
+        # Subtest: returns undefined for non-existent path
+        ok 4 - returns undefined for non-existent path
+          ---
+          duration_ms: 0.056958
+          type: 'test'
+          ...
+        # Subtest: returns undefined for partially invalid path
+        ok 5 - returns undefined for partially invalid path
+          ---
+          duration_ms: 0.04825
+          type: 'test'
+          ...
+        # Subtest: handles empty path segments gracefully
+        ok 6 - handles empty path segments gracefully
+          ---
+          duration_ms: 0.044333
+          type: 'test'
+          ...
+        # Subtest: handles numeric array indices
+        ok 7 - handles numeric array indices
+          ---
+          duration_ms: 0.136375
+          type: 'test'
+          ...
+        # Subtest: handles map paths (map:N)
+        ok 8 - handles map paths (map:N)
+          ---
+          duration_ms: 0.075791
+          type: 'test'
+          ...
+        # Subtest: returns null/undefined values when they exist
+        ok 9 - returns null/undefined values when they exist
+          ---
+          duration_ms: 0.222541
+          type: 'test'
+          ...
+        1..9
+    ok 1 - traversePath
+      ---
+      duration_ms: 6.139959
+      type: 'suite'
+      ...
+    # Subtest: getParentPath
+        # Subtest: returns null for root path
+        ok 1 - returns null for root path
+          ---
+          duration_ms: 0.177542
+          type: 'test'
+          ...
+        # Subtest: returns root for one-level path
+        ok 2 - returns root for one-level path
+          ---
+          duration_ms: 0.069792
+          type: 'test'
+          ...
+        # Subtest: returns parent for nested path
+        ok 3 - returns parent for nested path
+          ---
+          duration_ms: 0.052292
+          type: 'test'
+          ...
+        # Subtest: returns null for empty path
+        ok 4 - returns null for empty path
+          ---
+          duration_ms: 0.0395
+          type: 'test'
+          ...
+        # Subtest: does not mutate original path
+        ok 5 - does not mutate original path
+          ---
+          duration_ms: 0.035708
+          type: 'test'
+          ...
+        1..5
+    ok 2 - getParentPath
+      ---
+      duration_ms: 0.488875
+      type: 'suite'
+      ...
+    # Subtest: getPathLeaf
+        # Subtest: returns last segment
+        ok 1 - returns last segment
+          ---
+          duration_ms: 0.068042
+          type: 'test'
+          ...
+        # Subtest: returns root for root path
+        ok 2 - returns root for root path
+          ---
+          duration_ms: 0.030042
+          type: 'test'
+          ...
+        # Subtest: returns root for empty path
+        ok 3 - returns root for empty path
+          ---
+          duration_ms: 0.029167
+          type: 'test'
+          ...
+        # Subtest: handles single-segment paths
+        ok 4 - handles single-segment paths
+          ---
+          duration_ms: 0.030291
+          type: 'test'
+          ...
+        # Subtest: handles numeric segments
+        ok 5 - handles numeric segments
+          ---
+          duration_ms: 0.028667
+          type: 'test'
+          ...
+        1..5
+    ok 3 - getPathLeaf
+      ---
+      duration_ms: 0.242125
+      type: 'suite'
+      ...
+    # Subtest: pathToKey
+        # Subtest: converts simple path to dot notation
+        ok 1 - converts simple path to dot notation
+          ---
+          duration_ms: 0.057166
+          type: 'test'
+          ...
+        # Subtest: converts nested path to dot notation
+        ok 2 - converts nested path to dot notation
+          ---
+          duration_ms: 1.957958
+          type: 'test'
+          ...
+        # Subtest: handles root path
+        ok 3 - handles root path
+          ---
+          duration_ms: 0.187958
+          type: 'test'
+          ...
+        # Subtest: handles empty path
+        ok 4 - handles empty path
+          ---
+          duration_ms: 0.108458
+          type: 'test'
+          ...
+        # Subtest: handles paths with special characters
+        ok 5 - handles paths with special characters
+          ---
+          duration_ms: 0.101417
+          type: 'test'
+          ...
+        1..5
+    ok 4 - pathToKey
+      ---
+      duration_ms: 2.774417
+      type: 'suite'
+      ...
+    # Subtest: keyToPath
+        # Subtest: converts dot notation to path array
+        ok 1 - converts dot notation to path array
+          ---
+          duration_ms: 0.118375
+          type: 'test'
+          ...
+        # Subtest: converts nested dot notation
+        ok 2 - converts nested dot notation
+          ---
+          duration_ms: 0.045458
+          type: 'test'
+          ...
+        # Subtest: handles root key
+        ok 3 - handles root key
+          ---
+          duration_ms: 0.036708
+          type: 'test'
+          ...
+        # Subtest: handles empty string
+        ok 4 - handles empty string
+          ---
+          duration_ms: 0.034542
+          type: 'test'
+          ...
+        # Subtest: is inverse of pathToKey
+        ok 5 - is inverse of pathToKey
+          ---
+          duration_ms: 0.038833
+          type: 'test'
+          ...
+        1..5
+    ok 5 - keyToPath
+      ---
+      duration_ms: 0.370167
+      type: 'suite'
+      ...
+    # Subtest: getAncestorPaths
+        # Subtest: returns ancestors for nested path
+        ok 1 - returns ancestors for nested path
+          ---
+          duration_ms: 0.150166
+          type: 'test'
+          ...
+        # Subtest: returns single ancestor for root
+        ok 2 - returns single ancestor for root
+          ---
+          duration_ms: 0.04975
+          type: 'test'
+          ...
+        # Subtest: returns two ancestors for one-level path
+        ok 3 - returns two ancestors for one-level path
+          ---
+          duration_ms: 0.038625
+          type: 'test'
+          ...
+        # Subtest: returns empty for empty path
+        ok 4 - returns empty for empty path
+          ---
+          duration_ms: 0.033958
+          type: 'test'
+          ...
+        1..4
+    ok 6 - getAncestorPaths
+      ---
+      duration_ms: 0.327625
+      type: 'suite'
+      ...
+    # Subtest: appendToPath
+        # Subtest: appends segment to path
+        ok 1 - appends segment to path
+          ---
+          duration_ms: 0.065917
+          type: 'test'
+          ...
+        # Subtest: does not mutate original path
+        ok 2 - does not mutate original path
+          ---
+          duration_ms: 0.031625
+          type: 'test'
+          ...
+        # Subtest: appends to root path
+        ok 3 - appends to root path
+          ---
+          duration_ms: 0.031584
+          type: 'test'
+          ...
+        # Subtest: appends to empty path
+        ok 4 - appends to empty path
+          ---
+          duration_ms: 0.03425
+          type: 'test'
+          ...
+        # Subtest: handles numeric segments
+        ok 5 - handles numeric segments
+          ---
+          duration_ms: 0.032584
+          type: 'test'
+          ...
+        1..5
+    ok 7 - appendToPath
+      ---
+      duration_ms: 0.272209
+      type: 'suite'
+      ...
+    # Subtest: isValidPath
+        # Subtest: returns true for valid path
+        ok 1 - returns true for valid path
+          ---
+          duration_ms: 0.074375
+          type: 'test'
+          ...
+        # Subtest: returns true for deeply valid path
+        ok 2 - returns true for deeply valid path
+          ---
+          duration_ms: 0.031334
+          type: 'test'
+          ...
+        # Subtest: returns false for invalid path
+        ok 3 - returns false for invalid path
+          ---
+          duration_ms: 0.031208
+          type: 'test'
+          ...
+        # Subtest: returns false for partially invalid path
+        ok 4 - returns false for partially invalid path
+          ---
+          duration_ms: 0.033666
+          type: 'test'
+          ...
+        # Subtest: returns true for root path
+        ok 5 - returns true for root path
+          ---
+          duration_ms: 0.029791
+          type: 'test'
+          ...
+        # Subtest: handles paths to null values
+        ok 6 - handles paths to null values
+          ---
+          duration_ms: 0.0385
+          type: 'test'
+          ...
+        # Subtest: handles array indices
+        ok 7 - handles array indices
+          ---
+          duration_ms: 0.04825
+          type: 'test'
+          ...
+        1..7
+    ok 8 - isValidPath
+      ---
+      duration_ms: 0.356541
+      type: 'suite'
+      ...
+    # Subtest: isRootPath
+        # Subtest: returns true for root path
+        ok 1 - returns true for root path
+          ---
+          duration_ms: 0.062667
+          type: 'test'
+          ...
+        # Subtest: returns false for non-root path
+        ok 2 - returns false for non-root path
+          ---
+          duration_ms: 0.038792
+          type: 'test'
+          ...
+        # Subtest: returns false for empty path
+        ok 3 - returns false for empty path
+          ---
+          duration_ms: 0.029416
+          type: 'test'
+          ...
+        # Subtest: returns false for path starting with non-root
+        ok 4 - returns false for path starting with non-root
+          ---
+          duration_ms: 0.030417
+          type: 'test'
+          ...
+        # Subtest: returns false for nested path
+        ok 5 - returns false for nested path
+          ---
+          duration_ms: 0.029584
+          type: 'test'
+          ...
+        1..5
+    ok 9 - isRootPath
+      ---
+      duration_ms: 0.248125
+      type: 'suite'
+      ...
+    # Subtest: normalizePath
+        # Subtest: adds root to path without root
+        ok 1 - adds root to path without root
+          ---
+          duration_ms: 0.079209
+          type: 'test'
+          ...
+        # Subtest: does not modify path already starting with root
+        ok 2 - does not modify path already starting with root
+          ---
+          duration_ms: 0.031583
+          type: 'test'
+          ...
+        # Subtest: adds root to empty path
+        ok 3 - adds root to empty path
+          ---
+          duration_ms: 0.031917
+          type: 'test'
+          ...
+        # Subtest: handles single non-root segment
+        ok 4 - handles single non-root segment
+          ---
+          duration_ms: 0.0325
+          type: 'test'
+          ...
+        # Subtest: does not mutate original path
+        ok 5 - does not mutate original path
+          ---
+          duration_ms: 0.087916
+          type: 'test'
+          ...
+        1..5
+    ok 10 - normalizePath
+      ---
+      duration_ms: 0.32425
+      type: 'suite'
+      ...
+    # Subtest: edge cases
+        # Subtest: handles very deep paths
+        ok 1 - handles very deep paths
+          ---
+          duration_ms: 0.097625
+          type: 'test'
+          ...
+        # Subtest: handles paths with special characters
+        ok 2 - handles paths with special characters
+          ---
+          duration_ms: 0.034958
+          type: 'test'
+          ...
+        # Subtest: handles paths with empty segments
+        ok 3 - handles paths with empty segments
+          ---
+          duration_ms: 0.042167
+          type: 'test'
+          ...
+        # Subtest: handles circular reference traversal (stops at undefined)
+        ok 4 - handles circular reference traversal (stops at undefined)
+          ---
+          duration_ms: 0.038416
+          type: 'test'
+          ...
+        # Subtest: handles traversal through Map keys
+        ok 5 - handles traversal through Map keys
+          ---
+          duration_ms: 0.048584
+          type: 'test'
+          ...
+        # Subtest: handles very long paths without performance issues
+        ok 6 - handles very long paths without performance issues
+          ---
+          duration_ms: 1.315417
+          type: 'test'
+          ...
+        1..6
+    ok 11 - edge cases
+      ---
+      duration_ms: 1.650167
+      type: 'suite'
+      ...
+    1..11
+ok 6 - Path Utils
+  ---
+  duration_ms: 14.060875
+  type: 'suite'
+  ...
+# Subtest: Property Access
+    # Subtest: getOwnProperties
+        # Subtest: returns empty array for null
+        ok 1 - returns empty array for null
+          ---
+          duration_ms: 0.726334
+          type: 'test'
+          ...
+        # Subtest: returns empty array for undefined
+        ok 2 - returns empty array for undefined
+          ---
+          duration_ms: 0.071125
+          type: 'test'
+          ...
+        # Subtest: returns properties for simple object
+        ok 3 - returns properties for simple object
+          ---
+          duration_ms: 0.211208
+          type: 'test'
+          ...
+        # Subtest: returns properties with internal properties
+        ok 4 - returns properties with internal properties
+          ---
+          duration_ms: 0.070666
+          type: 'test'
+          ...
+        # Subtest: returns empty array for empty object
+        ok 5 - returns empty array for empty object
+          ---
+          duration_ms: 0.051
+          type: 'test'
+          ...
+        # Subtest: works with Object.create(null)
+        ok 6 - works with Object.create(null)
+          ---
+          duration_ms: 0.051833
+          type: 'test'
+          ...
+        # Subtest: handles objects with symbol keys (filters them out)
+        ok 7 - handles objects with symbol keys (filters them out)
+          ---
+          duration_ms: 0.153792
+          type: 'test'
+          ...
+        # Subtest: handles objects with getters
+        ok 8 - handles objects with getters
+          ---
+          duration_ms: 0.077042
+          type: 'test'
+          ...
+        # Subtest: handles objects with null/undefined values
+        ok 9 - handles objects with null/undefined values
+          ---
+          duration_ms: 0.251875
+          type: 'test'
+          ...
+        # Subtest: uses Reflect.ownKeys fallback for proxies
+        ok 10 - uses Reflect.ownKeys fallback for proxies
+          ---
+          duration_ms: 0.303459
+          type: 'test'
+          ...
+        # Subtest: handles frozen objects
+        ok 11 - handles frozen objects
+          ---
+          duration_ms: 0.060125
+          type: 'test'
+          ...
+        # Subtest: handles sealed objects
+        ok 12 - handles sealed objects
+          ---
+          duration_ms: 0.04275
+          type: 'test'
+          ...
+        1..12
+    ok 1 - getOwnProperties
+      ---
+      duration_ms: 3.134
+      type: 'suite'
+      ...
+    # Subtest: getVisibleProperties
+        # Subtest: filters out internal properties
+        ok 1 - filters out internal properties
+          ---
+          duration_ms: 0.1175
+          type: 'test'
+          ...
+        # Subtest: returns all properties when none are internal
+        ok 2 - returns all properties when none are internal
+          ---
+          duration_ms: 0.039
+          type: 'test'
+          ...
+        # Subtest: returns empty for object with only internal properties
+        ok 3 - returns empty for object with only internal properties
+          ---
+          duration_ms: 0.081625
+          type: 'test'
+          ...
+        # Subtest: handles mixed test object
+        ok 4 - handles mixed test object
+          ---
+          duration_ms: 0.05575
+          type: 'test'
+          ...
+        # Subtest: returns empty for null
+        ok 5 - returns empty for null
+          ---
+          duration_ms: 0.03375
+          type: 'test'
+          ...
+        # Subtest: returns empty for undefined
+        ok 6 - returns empty for undefined
+          ---
+          duration_ms: 0.0305
+          type: 'test'
+          ...
+        1..6
+    ok 2 - getVisibleProperties
+      ---
+      duration_ms: 0.4325
+      type: 'suite'
+      ...
+    # Subtest: partitionProperties
+        # Subtest: separates scalars from collections
+        ok 1 - separates scalars from collections
+          ---
+          duration_ms: 0.229833
+          type: 'test'
+          ...
+        # Subtest: returns only scalars when no collections
+        ok 2 - returns only scalars when no collections
+          ---
+          duration_ms: 0.0505
+          type: 'test'
+          ...
+        # Subtest: returns only collections when no scalars
+        ok 3 - returns only collections when no scalars
+          ---
+          duration_ms: 0.084583
+          type: 'test'
+          ...
+        # Subtest: returns empty arrays for empty object
+        ok 4 - returns empty arrays for empty object
+          ---
+          duration_ms: 0.039083
+          type: 'test'
+          ...
+        # Subtest: filters internal properties before partitioning
+        ok 5 - filters internal properties before partitioning
+          ---
+          duration_ms: 0.501
+          type: 'test'
+          ...
+        # Subtest: classifies Date as scalar (not collection)
+        ok 6 - classifies Date as scalar (not collection)
+          ---
+          duration_ms: 0.202375
+          type: 'test'
+          ...
+        # Subtest: classifies nested objects as scalars
+        ok 7 - classifies nested objects as scalars
+          ---
+          duration_ms: 0.174
+          type: 'test'
+          ...
+        1..7
+    ok 3 - partitionProperties
+      ---
+      duration_ms: 2.24225
+      type: 'suite'
+      ...
+    # Subtest: countVisibleProperties
+        # Subtest: counts visible properties
+        ok 1 - counts visible properties
+          ---
+          duration_ms: 0.208417
+          type: 'test'
+          ...
+        # Subtest: excludes internal properties from count
+        ok 2 - excludes internal properties from count
+          ---
+          duration_ms: 0.101917
+          type: 'test'
+          ...
+        # Subtest: returns 0 for empty object
+        ok 3 - returns 0 for empty object
+          ---
+          duration_ms: 0.095042
+          type: 'test'
+          ...
+        # Subtest: returns 0 for null
+        ok 4 - returns 0 for null
+          ---
+          duration_ms: 0.091125
+          type: 'test'
+          ...
+        # Subtest: returns 0 for undefined
+        ok 5 - returns 0 for undefined
+          ---
+          duration_ms: 0.090834
+          type: 'test'
+          ...
+        # Subtest: returns 0 for object with only internal properties
+        ok 6 - returns 0 for object with only internal properties
+          ---
+          duration_ms: 0.105833
+          type: 'test'
+          ...
+        # Subtest: counts properties in large object
+        ok 7 - counts properties in large object
+          ---
+          duration_ms: 1.487542
+          type: 'test'
+          ...
+        1..7
+    ok 4 - countVisibleProperties
+      ---
+      duration_ms: 2.623291
+      type: 'suite'
+      ...
+    # Subtest: hasVisibleProperties
+        # Subtest: returns true for object with visible properties
+        ok 1 - returns true for object with visible properties
+          ---
+          duration_ms: 0.427833
+          type: 'test'
+          ...
+        # Subtest: returns false for empty object
+        ok 2 - returns false for empty object
+          ---
+          duration_ms: 0.115833
+          type: 'test'
+          ...
+        # Subtest: returns false for null
+        ok 3 - returns false for null
+          ---
+          duration_ms: 0.093625
+          type: 'test'
+          ...
+        # Subtest: returns false for undefined
+        ok 4 - returns false for undefined
+          ---
+          duration_ms: 0.093292
+          type: 'test'
+          ...
+        # Subtest: returns false for object with only internal properties
+        ok 5 - returns false for object with only internal properties
+          ---
+          duration_ms: 0.109458
+          type: 'test'
+          ...
+        # Subtest: returns true for object with mix of internal and visible
+        ok 6 - returns true for object with mix of internal and visible
+          ---
+          duration_ms: 0.10525
+          type: 'test'
+          ...
+        # Subtest: uses fast path for regular objects
+        ok 7 - uses fast path for regular objects
+          ---
+          duration_ms: 0.101375
+          type: 'test'
+          ...
+        # Subtest: uses Reflect.ownKeys fallback for proxies
+        ok 8 - uses Reflect.ownKeys fallback for proxies
+          ---
+          duration_ms: 0.114625
+          type: 'test'
+          ...
+        1..8
+    ok 5 - hasVisibleProperties
+      ---
+      duration_ms: 1.460959
+      type: 'suite'
+      ...
+    # Subtest: edge cases
+        # Subtest: handles objects with numeric keys
+        ok 1 - handles objects with numeric keys
+          ---
+          duration_ms: 0.255917
+          type: 'test'
+          ...
+        # Subtest: handles objects with special character keys
+        ok 2 - handles objects with special character keys
+          ---
+          duration_ms: 0.129375
+          type: 'test'
+          ...
+        # Subtest: handles very large objects
+        ok 3 - handles very large objects
+          ---
+          duration_ms: 19.8585
+          type: 'test'
+          ...
+        # Subtest: handles objects with circular references
+        ok 4 - handles objects with circular references
+          ---
+          duration_ms: 0.111666
+          type: 'test'
+          ...
+        # Subtest: handles class instances
+        ok 5 - handles class instances
+          ---
+          duration_ms: 0.073
+          type: 'test'
+          ...
+        # Subtest: handles Error objects
+        ok 6 - handles Error objects
+          ---
+          duration_ms: 0.139084
+          type: 'test'
+          ...
+        # Subtest: handles Arrays (which are objects)
+        ok 7 - handles Arrays (which are objects)
+          ---
+          duration_ms: 0.053791
+          type: 'test'
+          ...
+        1..7
+    ok 6 - edge cases
+      ---
+      duration_ms: 20.788916
+      type: 'suite'
+      ...
+    # Subtest: getOwnProperties - ObjectType proxy fallback
+        # Subtest: should use Reflect.ownKeys as fast path for normal objects
+        ok 1 - should use Reflect.ownKeys as fast path for normal objects
+          ---
+          duration_ms: 0.084792
+          type: 'test'
+          ...
+        # Subtest: should handle empty objects correctly
+        ok 2 - should handle empty objects correctly
+          ---
+          duration_ms: 0.035084
+          type: 'test'
+          ...
+        # Subtest: should handle Arrays with all properties including length
+        ok 3 - should handle Arrays with all properties including length
+          ---
+          duration_ms: 0.051875
+          type: 'test'
+          ...
+        # Subtest: should work with standard proxies
+        ok 4 - should work with standard proxies
+          ---
+          duration_ms: 0.058166
+          type: 'test'
+          ...
+        # Subtest: should fall back gracefully when Reflect.ownKeys has no string keys
+        ok 5 - should fall back gracefully when Reflect.ownKeys has no string keys
+          ---
+          duration_ms: 0.055334
+          type: 'test'
+          ...
+        1..5
+    ok 7 - getOwnProperties - ObjectType proxy fallback
+      ---
+      duration_ms: 0.351042
+      type: 'suite'
+      ...
+    1..7
+ok 7 - Property Access
+  ---
+  duration_ms: 31.972292
+  type: 'suite'
+  ...
+# Subtest: Value Types
+    # Subtest: classifyValue - primitives
+        # Subtest: classifies null
+        ok 1 - classifies null
+          ---
+          duration_ms: 0.372458
+          type: 'test'
+          ...
+        # Subtest: classifies undefined
+        ok 2 - classifies undefined
+          ---
+          duration_ms: 0.058667
+          type: 'test'
+          ...
+        # Subtest: classifies string
+        ok 3 - classifies string
+          ---
+          duration_ms: 0.053333
+          type: 'test'
+          ...
+        # Subtest: classifies empty string
+        ok 4 - classifies empty string
+          ---
+          duration_ms: 0.052083
+          type: 'test'
+          ...
+        # Subtest: classifies number
+        ok 5 - classifies number
+          ---
+          duration_ms: 0.045334
+          type: 'test'
+          ...
+        # Subtest: classifies zero
+        ok 6 - classifies zero
+          ---
+          duration_ms: 0.038792
+          type: 'test'
+          ...
+        # Subtest: classifies negative number
+        ok 7 - classifies negative number
+          ---
+          duration_ms: 0.128542
+          type: 'test'
+          ...
+        # Subtest: classifies float
+        ok 8 - classifies float
+          ---
+          duration_ms: 0.049209
+          type: 'test'
+          ...
+        # Subtest: classifies Infinity
+        ok 9 - classifies Infinity
+          ---
+          duration_ms: 0.214708
+          type: 'test'
+          ...
+        # Subtest: classifies NaN
+        ok 10 - classifies NaN
+          ---
+          duration_ms: 0.231
+          type: 'test'
+          ...
+        # Subtest: classifies boolean true
+        ok 11 - classifies boolean true
+          ---
+          duration_ms: 0.048458
+          type: 'test'
+          ...
+        # Subtest: classifies boolean false
+        ok 12 - classifies boolean false
+          ---
+          duration_ms: 0.037958
+          type: 'test'
+          ...
+        # Subtest: classifies bigint
+        ok 13 - classifies bigint
+          ---
+          duration_ms: 0.035
+          type: 'test'
+          ...
+        # Subtest: classifies symbol
+        ok 14 - classifies symbol
+          ---
+          duration_ms: 0.033167
+          type: 'test'
+          ...
+        1..14
+    ok 1 - classifyValue - primitives
+      ---
+      duration_ms: 2.103583
+      type: 'suite'
+      ...
+    # Subtest: classifyValue - special types
+        # Subtest: classifies Date
+        ok 1 - classifies Date
+          ---
+          duration_ms: 0.092542
+          type: 'test'
+          ...
+        # Subtest: classifies invalid Date
+        ok 2 - classifies invalid Date
+          ---
+          duration_ms: 0.362667
+          type: 'test'
+          ...
+        # Subtest: classifies named function
+        ok 3 - classifies named function
+          ---
+          duration_ms: 0.035834
+          type: 'test'
+          ...
+        # Subtest: classifies anonymous function
+        ok 4 - classifies anonymous function
+          ---
+          duration_ms: 0.031458
+          type: 'test'
+          ...
+        # Subtest: classifies arrow function
+        ok 5 - classifies arrow function
+          ---
+          duration_ms: 0.030375
+          type: 'test'
+          ...
+        # Subtest: classifies class constructor
+        ok 6 - classifies class constructor
+          ---
+          duration_ms: 0.115208
+          type: 'test'
+          ...
+        # Subtest: classifies async function
+        ok 7 - classifies async function
+          ---
+          duration_ms: 0.03225
+          type: 'test'
+          ...
+        # Subtest: classifies generator function
+        ok 8 - classifies generator function
+          ---
+          duration_ms: 0.030625
+          type: 'test'
+          ...
+        1..8
+    ok 2 - classifyValue - special types
+      ---
+      duration_ms: 0.810167
+      type: 'suite'
+      ...
+    # Subtest: classifyValue - collections
+        # Subtest: classifies empty array
+        ok 1 - classifies empty array
+          ---
+          duration_ms: 0.081208
+          type: 'test'
+          ...
+        # Subtest: classifies simple array
+        ok 2 - classifies simple array
+          ---
+          duration_ms: 0.031458
+          type: 'test'
+          ...
+        # Subtest: classifies nested array
+        ok 3 - classifies nested array
+          ---
+          duration_ms: 0.029292
+          type: 'test'
+          ...
+        # Subtest: classifies typed array as array
+        ok 4 - classifies typed array as array
+          ---
+          duration_ms: 0.063333
+          type: 'test'
+          ...
+        # Subtest: classifies empty Map
+        ok 5 - classifies empty Map
+          ---
+          duration_ms: 0.035209
+          type: 'test'
+          ...
+        # Subtest: classifies Map with entries
+        ok 6 - classifies Map with entries
+          ---
+          duration_ms: 0.035125
+          type: 'test'
+          ...
+        # Subtest: classifies empty Set
+        ok 7 - classifies empty Set
+          ---
+          duration_ms: 0.033916
+          type: 'test'
+          ...
+        # Subtest: classifies Set with values
+        ok 8 - classifies Set with values
+          ---
+          duration_ms: 0.07075
+          type: 'test'
+          ...
+        # Subtest: classifies WeakMap as object (not Map)
+        ok 9 - classifies WeakMap as object (not Map)
+          ---
+          duration_ms: 0.034
+          type: 'test'
+          ...
+        # Subtest: classifies WeakSet as object (not Set)
+        ok 10 - classifies WeakSet as object (not Set)
+          ---
+          duration_ms: 0.029166
+          type: 'test'
+          ...
+        1..10
+    ok 3 - classifyValue - collections
+      ---
+      duration_ms: 0.526792
+      type: 'suite'
+      ...
+    # Subtest: classifyValue - objects
+        # Subtest: classifies empty object
+        ok 1 - classifies empty object
+          ---
+          duration_ms: 0.071792
+          type: 'test'
+          ...
+        # Subtest: classifies simple object
+        ok 2 - classifies simple object
+          ---
+          duration_ms: 0.03
+          type: 'test'
+          ...
+        # Subtest: classifies nested object
+        ok 3 - classifies nested object
+          ---
+          duration_ms: 0.030083
+          type: 'test'
+          ...
+        # Subtest: classifies object with null prototype
+        ok 4 - classifies object with null prototype
+          ---
+          duration_ms: 0.030166
+          type: 'test'
+          ...
+        # Subtest: classifies class instance as object
+        ok 5 - classifies class instance as object
+          ---
+          duration_ms: 0.044708
+          type: 'test'
+          ...
+        # Subtest: classifies RegExp as object
+        ok 6 - classifies RegExp as object
+          ---
+          duration_ms: 0.030542
+          type: 'test'
+          ...
+        # Subtest: classifies Error as object
+        ok 7 - classifies Error as object
+          ---
+          duration_ms: 0.0355
+          type: 'test'
+          ...
+        # Subtest: classifies Promise as object
+        ok 8 - classifies Promise as object
+          ---
+          duration_ms: 0.031167
+          type: 'test'
+          ...
+        # Subtest: classifies proxy as object
+        ok 9 - classifies proxy as object
+          ---
+          duration_ms: 0.044333
+          type: 'test'
+          ...
+        1..9
+    ok 4 - classifyValue - objects
+      ---
+      duration_ms: 0.429917
+      type: 'suite'
+      ...
+    # Subtest: isLeafLikeObject
+        # Subtest: returns true for small objects (≤ 5 properties)
+        ok 1 - returns true for small objects (≤ 5 properties)
+          ---
+          duration_ms: 0.205792
+          type: 'test'
+          ...
+        # Subtest: returns false for large objects (> 5 properties)
+        ok 2 - returns false for large objects (> 5 properties)
+          ---
+          duration_ms: 0.041916
+          type: 'test'
+          ...
+        # Subtest: excludes internal properties (__) from count
+        ok 3 - excludes internal properties (__) from count
+          ---
+          duration_ms: 0.035542
+          type: 'test'
+          ...
+        # Subtest: returns false for null
+        ok 4 - returns false for null
+          ---
+          duration_ms: 0.027417
+          type: 'test'
+          ...
+        # Subtest: returns false for undefined
+        ok 5 - returns false for undefined
+          ---
+          duration_ms: 0.02675
+          type: 'test'
+          ...
+        # Subtest: returns false for primitives
+        ok 6 - returns false for primitives
+          ---
+          duration_ms: 0.028458
+          type: 'test'
+          ...
+        # Subtest: returns false for Date
+        ok 7 - returns false for Date
+          ---
+          duration_ms: 0.027
+          type: 'test'
+          ...
+        # Subtest: returns false for Array
+        ok 8 - returns false for Array
+          ---
+          duration_ms: 0.027834
+          type: 'test'
+          ...
+        # Subtest: returns false for Map
+        ok 9 - returns false for Map
+          ---
+          duration_ms: 0.027709
+          type: 'test'
+          ...
+        # Subtest: returns false for Set
+        ok 10 - returns false for Set
+          ---
+          duration_ms: 0.030916
+          type: 'test'
+          ...
+        # Subtest: returns false for Function
+        ok 11 - returns false for Function
+          ---
+          duration_ms: 0.027583
+          type: 'test'
+          ...
+        # Subtest: returns false for objects with nested objects
+        ok 12 - returns false for objects with nested objects
+          ---
+          duration_ms: 0.034167
+          type: 'test'
+          ...
+        # Subtest: returns false for objects with arrays
+        ok 13 - returns false for objects with arrays
+          ---
+          duration_ms: 0.035209
+          type: 'test'
+          ...
+        # Subtest: returns true for objects with only scalar properties
+        ok 14 - returns true for objects with only scalar properties
+          ---
+          duration_ms: 0.032875
+          type: 'test'
+          ...
+        # Subtest: returns true for objects with null/undefined values
+        ok 15 - returns true for objects with null/undefined values
+          ---
+          duration_ms: 0.032375
+          type: 'test'
+          ...
+        # Subtest: returns true for empty object
+        ok 16 - returns true for empty object
+          ---
+          duration_ms: 0.030042
+          type: 'test'
+          ...
+        1..16
+    ok 5 - isLeafLikeObject
+      ---
+      duration_ms: 0.80575
+      type: 'suite'
+      ...
+    # Subtest: edge cases
+        # Subtest: handles all test values from FORMAT_TEST_VALUES
+        ok 1 - handles all test values from FORMAT_TEST_VALUES
+          ---
+          duration_ms: 0.160084
+          type: 'test'
+          ...
+        # Subtest: handles circular references
+        ok 2 - handles circular references
+          ---
+          duration_ms: 0.037
+          type: 'test'
+          ...
+        # Subtest: handles very deeply nested objects
+        ok 3 - handles very deeply nested objects
+          ---
+          duration_ms: 0.044958
+          type: 'test'
+          ...
+        # Subtest: handles objects with symbol keys
+        ok 4 - handles objects with symbol keys
+          ---
+          duration_ms: 0.035167
+          type: 'test'
+          ...
+        # Subtest: handles frozen objects
+        ok 5 - handles frozen objects
+          ---
+          duration_ms: 0.03475
+          type: 'test'
+          ...
+        # Subtest: handles sealed objects
+        ok 6 - handles sealed objects
+          ---
+          duration_ms: 0.032292
+          type: 'test'
+          ...
+        # Subtest: handles objects with getters
+        ok 7 - handles objects with getters
+          ---
+          duration_ms: 0.034625
+          type: 'test'
+          ...
+        # Subtest: handles Buffer as object (Node.js)
+        ok 8 - handles Buffer as object (Node.js)
+          ---
+          duration_ms: 0.040875
+          type: 'test'
+          ...
+        1..8
+    ok 6 - edge cases
+      ---
+      duration_ms: 0.492542
+      type: 'suite'
+      ...
+    # Subtest: navigability
+        # Subtest: marks primitives as non-navigable
+        ok 1 - marks primitives as non-navigable
+          ---
+          duration_ms: 0.065375
+          type: 'test'
+          ...
+        # Subtest: marks Date as navigable
+        ok 2 - marks Date as navigable
+          ---
+          duration_ms: 0.032208
+          type: 'test'
+          ...
+        # Subtest: marks objects as navigable
+        ok 3 - marks objects as navigable
+          ---
+          duration_ms: 0.029875
+          type: 'test'
+          ...
+        # Subtest: marks arrays as navigable
+        ok 4 - marks arrays as navigable
+          ---
+          duration_ms: 0.029083
+          type: 'test'
+          ...
+        # Subtest: marks collections as navigable
+        ok 5 - marks collections as navigable
+          ---
+          duration_ms: 0.030083
+          type: 'test'
+          ...
+        # Subtest: marks functions as navigable
+        ok 6 - marks functions as navigable
+          ---
+          duration_ms: 0.057459
+          type: 'test'
+          ...
+        1..6
+    ok 7 - navigability
+      ---
+      duration_ms: 0.301709
+      type: 'suite'
+      ...
+    # Subtest: isDateLike
+        # Subtest: returns true for direct Date instances
+        ok 1 - returns true for direct Date instances
+          ---
+          duration_ms: 0.415667
+          type: 'test'
+          ...
+        # Subtest: returns true for proxied Dates
+        ok 2 - returns true for proxied Dates
+          ---
+          duration_ms: 0.064583
+          type: 'test'
+          ...
+        # Subtest: returns false for null and undefined
+        ok 3 - returns false for null and undefined
+          ---
+          duration_ms: 0.033125
+          type: 'test'
+          ...
+        # Subtest: returns false for primitives
+        ok 4 - returns false for primitives
+          ---
+          duration_ms: 0.046083
+          type: 'test'
+          ...
+        # Subtest: returns false for non-Date objects
+        ok 5 - returns false for non-Date objects
+          ---
+          duration_ms: 0.03625
+          type: 'test'
+          ...
+        # Subtest: returns false for objects with only getTime
+        ok 6 - returns false for objects with only getTime
+          ---
+          duration_ms: 0.044542
+          type: 'test'
+          ...
+        # Subtest: returns false for objects with only toISOString
+        ok 7 - returns false for objects with only toISOString
+          ---
+          duration_ms: 0.030833
+          type: 'test'
+          ...
+        # Subtest: returns true for Date-like objects with both methods
+        ok 8 - returns true for Date-like objects with both methods
+          ---
+          duration_ms: 0.0475
+          type: 'test'
+          ...
+        1..8
+    ok 8 - isDateLike
+      ---
+      duration_ms: 0.80075
+      type: 'suite'
+      ...
+    1..8
+ok 8 - Value Types
+  ---
+  duration_ms: 6.661708
+  type: 'suite'
+  ...
+1..8
+# tests 440
+# suites 81
+# pass 440
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 271.190166
+
+> filer@0.1.0 test:metadata
+> tsx test/metadata/run-tests.ts
+
+🧪 Metadata Test Suite
+
+📁 Found 1 test file(s):
+
+   - test/metadata/unit/core.test.ts
+
+▶ Metadata Type System Core
+  ▶ placeholder tests
+    ✔ type system core tests will go here (0.287042ms)
+  ✔ placeholder tests (0.68725ms)
+✔ Metadata Type System Core (0.875292ms)
+
+============================================================
+📊 Test Summary
+============================================================
+✅ Passed:  3
+❌ Failed:  0
+⏭️  Skipped: 0
+📈 Total:   3
+============================================================
+
+✅ All tests passed!
+
+
+> filer@0.1.0 test:integration
+> tsx test/integration/run-tests.ts
+
+🧪 Integration Test Suite (Cross-Component)
+
+📁 Found 1 test file(s):
+
+   - test/integration/placeholder.test.ts
+
+▶ Cross-Component Integration Tests
+  ▶ placeholder tests
+    ✔ integration tests will go here (0.274125ms)
+  ✔ placeholder tests (0.592958ms)
+✔ Cross-Component Integration Tests (0.752833ms)
+
+============================================================
+📊 Test Summary
+============================================================
+✅ Passed:  3
+❌ Failed:  0
+⏭️  Skipped: 0
+📈 Total:   3
+============================================================
+
+✅ All tests passed!
+
+
+> filer@0.1.0 test:browser
+> playwright test
+
+[2m[WebServer] [22m(node:22863) [DEP0066] DeprecationWarning: OutgoingMessage.prototype._headers is deprecated
+[2m[WebServer] [22m(Use `node --trace-deprecation ...` to show where the warning was created)
+Error: No tests found
+

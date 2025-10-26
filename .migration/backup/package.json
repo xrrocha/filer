@@ -9,8 +9,14 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "npm run test:all",
-    "test:all": "npm run test:navigator && npm run test:metadata && npm run test:integration",
-    "test:coverage": "npm run test:navigator:coverage && npm run test:metadata:coverage",
+    "test:all": "npm run test:memimg && npm run test:navigator && npm run test:metadata && npm run test:integration && npm run test:browser",
+    "test:coverage": "npm run test:memimg:coverage && npm run test:navigator:coverage && npm run test:metadata:coverage",
+    "test:memimg": "tsx test/memimg/run-tests.ts",
+    "test:memimg:unit": "tsx test/memimg/run-tests.ts --unit",
+    "test:memimg:integration": "tsx test/memimg/run-tests.ts --integration",
+    "test:memimg:watch": "tsx test/memimg/run-tests.ts --watch",
+    "test:memimg:filter": "tsx test/memimg/run-tests.ts --filter",
+    "test:memimg:coverage": "c8 --reporter=html --reporter=text --reporter=json-summary --reports-dir=.artifacts/coverage tsx test/memimg/run-tests.ts",
     "test:navigator": "npm run test:navigator:unit",
     "test:navigator:unit": "node --test test/navigator/unit/**/*.test.ts",
     "test:navigator:unit:watch": "node --test --watch test/navigator/unit/**/*.test.ts",
@@ -34,7 +40,6 @@
   },
   "dependencies": {
     "codejar": "^4.2.0",
-    "ireneo": "file:../ireneo",
     "prismjs": "^1.29.0"
   },
   "devDependencies": {

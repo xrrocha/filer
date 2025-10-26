@@ -7,8 +7,7 @@
  * Target: < 5% performance regression
  */
 
-import { serializeMemoryImage } from '../../src/memimg/serialize.js';
-import { deserializeMemoryImage } from '../../src/memimg/deserialize.js';
+import { serializeMemoryImageToJson, deserializeMemoryImageFromJson } from 'ireneo';
 
 function benchmark(name: string, fn: () => void, iterations: number = 10000): number {
   const start = Date.now();
@@ -25,7 +24,7 @@ console.log('=== Date Serialization Performance Benchmark ===\n');
 // Baseline: Bare Date (current behavior)
 const bareDateTime = benchmark('Bare Date serialization', () => {
   const date = new Date('2024-01-15T10:00:00.000Z');
-  serializeMemoryImage(date, new WeakMap());
+  serializeMemoryImageToJson(date);
 });
 
 // Baseline: Date with properties (future behavior)
@@ -33,14 +32,14 @@ const dateWithPropsTime = benchmark('Date with properties serialization', () => 
   const date = new Date('2024-01-15T10:00:00.000Z');
   (date as any).location = "Room A";
   (date as any).attendees = ["Alice", "Bob"];
-  serializeMemoryImage(date, new WeakMap());
+  serializeMemoryImageToJson(date);
 });
 
 // Baseline: Round-trip
 const roundTripTime = benchmark('Date round-trip (serialize + deserialize)', () => {
   const date = new Date('2024-01-15T10:00:00.000Z');
-  const json = serializeMemoryImage(date, new WeakMap());
-  deserializeMemoryImage(json);
+  const json = serializeMemoryImageToJson(date);
+  deserializeMemoryImageFromJson(json);
 }, 5000);
 
 console.log(`\n=== Baseline Summary ===`);

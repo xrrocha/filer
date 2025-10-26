@@ -7,8 +7,9 @@ import { defineConfig, devices } from '@playwright/test';
  * browser-only APIs like IndexedDB and LocalStorage.
  */
 export default defineConfig({
-  testDir: './test/memimg/browser',
+  testDir: './test',
   testMatch: '**/*.spec.ts',
+  testIgnore: '**/node_modules/**',
 
   /* Run tests in files in parallel */
   fullyParallel: true,

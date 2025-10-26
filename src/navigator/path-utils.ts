@@ -7,7 +7,7 @@
  * Navigator paths always start with 'root' (e.g., ['root', 'emps', 'king'])
  */
 
-import type { MutablePath } from '../memimg/types.js';
+import type { MutablePath } from 'ireneo';
 import { ROOT_PATH } from './constants.js';
 
 // PathArray is Navigator's mutable path type
